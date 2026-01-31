@@ -8,6 +8,7 @@ import { QuizView } from './QuizView';
 import { ExamView } from './ExamView';
 import { StudyBankList } from './StudyBankList';
 import { CustomInstructions } from './CustomInstructions';
+import { OllamaStatus } from './OllamaStatus';
 import { useStudy } from '@/context/StudyContext';
 import type { StudyBank } from '@/types';
 
@@ -35,9 +36,10 @@ export function Dashboard() {
               </div>
               <div>
                 <h1 className="text-xl font-bold gradient-text">StudySync AI</h1>
-                <p className="text-xs text-muted-foreground">AI-Powered Study Materials</p>
+                <p className="text-xs text-muted-foreground">Local AI-Powered Study Materials</p>
               </div>
             </div>
+            <OllamaStatus />
           </div>
         </div>
       </header>
@@ -206,7 +208,7 @@ export function Dashboard() {
       <footer className="border-t border-border/50 mt-12">
         <div className="container mx-auto px-4 py-6">
           <p className="text-center text-sm text-muted-foreground">
-            Powered by Google Gemini AI • 
+            Powered by Local Ollama + Llama 3.2 • 
             <span className="gradient-text font-medium ml-1">StudySync AI</span>
           </p>
         </div>
