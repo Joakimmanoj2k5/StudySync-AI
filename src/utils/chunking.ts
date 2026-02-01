@@ -17,8 +17,8 @@ export interface TextChunk {
 }
 
 const DEFAULT_OPTIONS: ChunkOptions = {
-  chunkSize: 1500,
-  overlapSize: 200,
+  chunkSize: 800,      // Reduced for more thorough processing per chunk
+  overlapSize: 100,    // Smaller overlap
 };
 
 /**

@@ -24,52 +24,60 @@ export function getCustomInstructions(): string {
 }
 
 // System prompt for syllabus auto-filler
-const SYLLABUS_SYSTEM_PROMPT = `You are a Senior Academic Researcher. I will provide a syllabus topic or study material. If I do not provide detailed notes, research your internal knowledge to generate a comprehensive detailed study guide including:
-1. Key Definitions - Define all important terms
-2. Core Theories - Explain the fundamental concepts and theories
-3. A Practical Example - Provide real-world applications
-Format the output as clear, well-structured text.`;
+const SYLLABUS_SYSTEM_PROMPT = `You are a Senior Academic Researcher and Expert Educator. Your task is to create COMPREHENSIVE study materials from the given content.
+
+IMPORTANT: Generate as MANY questions as possible. Be thorough and cover ALL concepts, terms, definitions, facts, and ideas in the content.
+
+For each topic/concept you identify:
+1. Create multiple flashcards covering different aspects
+2. Create MCQs that test understanding at different levels
+3. Create fill-in-the-blanks for key terms and definitions
+4. Create short answer questions for deeper analysis`;
 
 // Prompt template for generating study materials
 function getStudyMaterialsPrompt(text: string): string {
   const userInstructions = getCustomInstructions();
-  const additionalContext = userInstructions ? `\n\nAdditional Instructions: ${userInstructions}` : '';
+  const additionalContext = userInstructions ? `\n\nAdditional User Instructions: ${userInstructions}` : '';
   
   return `${SYLLABUS_SYSTEM_PROMPT}${additionalContext}
 
-Based on the following content, generate comprehensive study materials in JSON format.
-
-CONTENT:
+CONTENT TO ANALYZE:
+"""
 ${text}
+"""
 
-Generate the following in valid JSON format (no markdown, just raw JSON):
+Your task: Generate MAXIMUM study materials from the above content. Extract EVERY piece of useful information.
+
+Return a JSON object with this EXACT structure:
 {
   "flashcards": [
-    {"question": "Clear question about key concept", "answer": "Detailed answer with explanation"}
+    {"question": "What is [concept]?", "answer": "Detailed explanation..."},
+    {"question": "Define [term]", "answer": "Complete definition..."},
+    {"question": "Explain [topic]", "answer": "Thorough explanation..."}
   ],
   "mcqs": [
     {
-      "question": "Question testing understanding",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "question": "Which of the following best describes [concept]?",
+      "options": ["Correct answer", "Plausible wrong answer 1", "Plausible wrong answer 2", "Plausible wrong answer 3"],
       "correctIndex": 0,
-      "explanation": "Why this answer is correct"
+      "explanation": "Detailed explanation of why this is correct"
     }
   ],
   "fillBlanks": [
-    {"sentence": "A sentence with _____ for important term", "answer": "missing word"}
+    {"sentence": "The _____ is defined as [rest of definition]", "answer": "key term"}
   ],
   "shortAnswers": [
-    {"question": "Thought-provoking question", "suggestedAnswer": "Model answer"}
+    {"question": "Explain in detail...", "suggestedAnswer": "Comprehensive model answer..."}
   ]
 }
 
-Generate at least:
-- 5 flashcards covering key concepts
-- 3 MCQs with explanations
-- 3 fill-in-the-blanks for important terms
-- 2 short answer questions
+REQUIREMENTS - Generate AT MINIMUM:
+- 15-20 flashcards (cover ALL key concepts, definitions, facts, processes)
+- 8-10 MCQs (test comprehension, application, and analysis)
+- 8-10 fill-in-the-blanks (for important terms and definitions)  
+- 5-6 short answer questions (for deeper understanding)
 
-Return ONLY valid JSON, no other text.`;
+CRITICAL: Return ONLY the JSON object. No markdown, no explanation, no extra text. Just pure JSON starting with { and ending with }`;
 }
 
 interface OllamaResponse {
@@ -104,7 +112,8 @@ async function streamOllamaResponse(
       format: 'json',
       options: {
         temperature: 0.7,
-        num_predict: 4096,
+        num_predict: 8192,  // Increased for more content
+        num_ctx: 4096,      // Context window
       }
     }),
   });
@@ -174,7 +183,8 @@ async function callOllamaAPI(prompt: string): Promise<string> {
       format: 'json',
       options: {
         temperature: 0.7,
-        num_predict: 4096,
+        num_predict: 8192,  // Increased for more content
+        num_ctx: 4096,
       }
     }),
   });
@@ -398,7 +408,7 @@ function extractImportantWords(sentence: string): string[] {
 }
 
 function generateFallbackContent(text: string): GeneratedContent {
-  console.log('[Fallback] Generating content locally');
+  console.log('[Fallback] Generating content locally - comprehensive mode');
   
   const sentences = extractSentences(text);
   const flashcards: GeneratedContent['flashcards'] = [];
@@ -406,21 +416,29 @@ function generateFallbackContent(text: string): GeneratedContent {
   const fillBlanks: GeneratedContent['fillBlanks'] = [];
   const shortAnswers: GeneratedContent['shortAnswers'] = [];
   
-  // Generate flashcards from sentences
-  for (let i = 0; i < Math.min(sentences.length, 10); i++) {
+  // Generate MORE flashcards from sentences
+  for (let i = 0; i < sentences.length && flashcards.length < 25; i++) {
     const sentence = sentences[i];
     const words = extractImportantWords(sentence);
     
     if (words.length > 0) {
+      // Create multiple types of flashcards per sentence
       flashcards.push({
-        question: `Explain: ${words.slice(0, 3).join(', ')}`,
+        question: `What do you know about: ${words.slice(0, 2).join(', ')}?`,
         answer: sentence
       });
+      
+      if (words.length >= 2 && flashcards.length < 25) {
+        flashcards.push({
+          question: `Define or explain: ${words[0]}`,
+          answer: sentence
+        });
+      }
     }
   }
   
-  // Generate fill-in-blanks
-  for (let i = 0; i < Math.min(sentences.length, 5); i++) {
+  // Generate MORE fill-in-blanks
+  for (let i = 0; i < sentences.length && fillBlanks.length < 15; i++) {
     const sentence = sentences[i];
     const words = extractImportantWords(sentence);
     
@@ -437,13 +455,46 @@ function generateFallbackContent(text: string): GeneratedContent {
     }
   }
   
-  // Generate short answers
-  for (let i = 0; i < Math.min(sentences.length, 3); i++) {
+  // Generate MCQs from sentences with important words
+  for (let i = 0; i < sentences.length && mcqs.length < 10; i++) {
     const sentence = sentences[i];
-    shortAnswers.push({
-      question: `Summarize and explain: ${sentence.substring(0, 80)}...`,
-      suggestedAnswer: sentence
-    });
+    const words = extractImportantWords(sentence);
+    
+    if (words.length >= 4) {
+      const correctWord = words[0];
+      const wrongOptions = words.slice(1, 4);
+      
+      while (wrongOptions.length < 3) {
+        wrongOptions.push(`Option ${wrongOptions.length + 1}`);
+      }
+      
+      const options = [correctWord, ...wrongOptions];
+      // Shuffle options
+      for (let j = options.length - 1; j > 0; j--) {
+        const k = Math.floor(Math.random() * (j + 1));
+        [options[j], options[k]] = [options[k], options[j]];
+      }
+      
+      mcqs.push({
+        question: `Which term is most relevant to: "${sentence.substring(0, 60)}..."?`,
+        options: options,
+        correctIndex: options.indexOf(correctWord),
+        explanation: sentence
+      });
+    }
+  }
+  
+  // Generate MORE short answers
+  for (let i = 0; i < sentences.length && shortAnswers.length < 8; i++) {
+    const sentence = sentences[i];
+    const words = extractImportantWords(sentence);
+    
+    if (words.length > 0) {
+      shortAnswers.push({
+        question: `Explain the concept: ${words.slice(0, 2).join(' ')}`,
+        suggestedAnswer: sentence
+      });
+    }
   }
   
   console.log('[Fallback] Generated:', {
