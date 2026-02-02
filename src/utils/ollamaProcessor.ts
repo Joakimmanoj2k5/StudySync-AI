@@ -23,61 +23,94 @@ export function getCustomInstructions(): string {
   return customInstructions;
 }
 
-// System prompt for syllabus auto-filler
-const SYLLABUS_SYSTEM_PROMPT = `You are a Senior Academic Researcher and Expert Educator. Your task is to create COMPREHENSIVE study materials from the given content.
+// System prompt for intelligent study material generation
+const SYLLABUS_SYSTEM_PROMPT = `You are an expert university professor and educational content creator with 20+ years of experience. Your job is to help students truly UNDERSTAND and MASTER topics, not just memorize facts.
 
-IMPORTANT: Generate as MANY questions as possible. Be thorough and cover ALL concepts, terms, definitions, facts, and ideas in the content.
+CRITICAL RULES:
+1. If the content is just a TOPIC NAME or SHORT PHRASE (like "Photosynthesis" or "World War 2"), you MUST use your knowledge to create comprehensive study materials about that topic
+2. Research and include REAL facts, dates, names, formulas, processes, and detailed explanations
+3. Questions should test UNDERSTANDING, not just recall
+4. All answers must be EDUCATIONAL and DETAILED (minimum 2-3 sentences)
+5. MCQ wrong options must be PLAUSIBLE (not obviously wrong)
+6. Every question should teach something valuable
 
-For each topic/concept you identify:
-1. Create multiple flashcards covering different aspects
-2. Create MCQs that test understanding at different levels
-3. Create fill-in-the-blanks for key terms and definitions
-4. Create short answer questions for deeper analysis`;
+QUESTION TYPES TO GENERATE:
+
+FLASHCARDS - Create these types:
+- "What is X?" → Full definition with context
+- "Explain the process of X" → Step-by-step breakdown
+- "What are the key characteristics of X?" → List with explanations
+- "Compare X and Y" → Detailed comparison
+- "What is the significance/importance of X?" → Why it matters
+- "What causes X?" / "What are the effects of X?" → Cause-effect relationships
+
+MCQs - Test different cognitive levels:
+- Knowledge: "Which of the following is true about X?"
+- Comprehension: "What does X primarily demonstrate?"
+- Application: "In which scenario would X be most applicable?"
+- Analysis: "What is the main difference between X and Y?"
+- Evaluation: "Which factor is MOST important in X?"
+
+FILL-IN-BLANKS - Focus on:
+- Key terminology and definitions
+- Important names, dates, numbers
+- Formulas and equations
+- Cause-effect relationships
+
+SHORT ANSWER - Ask for:
+- Explanations of processes
+- Analysis of relationships
+- Evaluation of significance
+- Real-world applications`;
 
 // Prompt template for generating study materials
 function getStudyMaterialsPrompt(text: string): string {
   const userInstructions = getCustomInstructions();
-  const additionalContext = userInstructions ? `\n\nAdditional User Instructions: ${userInstructions}` : '';
+  const additionalContext = userInstructions ? `\n\nUSER'S SPECIAL INSTRUCTIONS: ${userInstructions}` : '';
   
   return `${SYLLABUS_SYSTEM_PROMPT}${additionalContext}
 
-CONTENT TO ANALYZE:
+TOPIC/CONTENT TO STUDY:
 """
 ${text}
 """
 
-Your task: Generate MAXIMUM study materials from the above content. Extract EVERY piece of useful information.
+INSTRUCTIONS:
+1. If the above is just a topic name, USE YOUR KNOWLEDGE to create comprehensive study materials
+2. Cover ALL aspects: definitions, processes, history, applications, examples, formulas (if applicable)
+3. Make questions that would appear in actual exams
+4. Ensure answers are COMPLETE and EDUCATIONAL
 
-Return a JSON object with this EXACT structure:
+Generate study materials as a JSON object:
 {
   "flashcards": [
-    {"question": "What is [concept]?", "answer": "Detailed explanation..."},
-    {"question": "Define [term]", "answer": "Complete definition..."},
-    {"question": "Explain [topic]", "answer": "Thorough explanation..."}
+    {"question": "What is [concept]?", "answer": "Detailed 2-3 sentence answer with examples..."},
+    {"question": "Explain the process of [X]", "answer": "Step 1: ... Step 2: ... Step 3: ..."},
+    {"question": "Why is [X] important?", "answer": "Explanation of significance..."}
   ],
   "mcqs": [
     {
-      "question": "Which of the following best describes [concept]?",
-      "options": ["Correct answer", "Plausible wrong answer 1", "Plausible wrong answer 2", "Plausible wrong answer 3"],
+      "question": "Clear question testing understanding?",
+      "options": ["Correct answer (detailed)", "Plausible wrong option 1", "Plausible wrong option 2", "Plausible wrong option 3"],
       "correctIndex": 0,
-      "explanation": "Detailed explanation of why this is correct"
+      "explanation": "The answer is A because... This is important because..."
     }
   ],
   "fillBlanks": [
-    {"sentence": "The _____ is defined as [rest of definition]", "answer": "key term"}
+    {"sentence": "The process of _____ converts sunlight into chemical energy in plants.", "answer": "photosynthesis"}
   ],
   "shortAnswers": [
-    {"question": "Explain in detail...", "suggestedAnswer": "Comprehensive model answer..."}
+    {"question": "Explain in detail how [process] works and give a real-world example.", "suggestedAnswer": "Comprehensive 3-4 sentence model answer..."}
   ]
 }
 
-REQUIREMENTS - Generate AT MINIMUM:
-- 15-20 flashcards (cover ALL key concepts, definitions, facts, processes)
-- 8-10 MCQs (test comprehension, application, and analysis)
-- 8-10 fill-in-the-blanks (for important terms and definitions)  
-- 5-6 short answer questions (for deeper understanding)
+GENERATE EXACTLY:
+- 20 high-quality flashcards (covering definitions, processes, comparisons, significance)
+- 10 challenging MCQs (with plausible distractors and explanations)
+- 10 fill-in-the-blanks (for key terms, names, numbers, formulas)
+- 6 short answer questions (requiring deeper analysis)
 
-CRITICAL: Return ONLY the JSON object. No markdown, no explanation, no extra text. Just pure JSON starting with { and ending with }`;
+OUTPUT: Return ONLY valid JSON. No markdown, no explanations, just the JSON object.`;
 }
 
 interface OllamaResponse {
