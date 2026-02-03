@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RotateCcw, ChevronLeft, ChevronRight, Shuffle, BookOpen } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
@@ -13,12 +13,8 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [shuffledCards, setShuffledCards] = useState<Flashcard[]>([]);
   
-  // Update shuffled cards when flashcards change
-  useEffect(() => {
-    setShuffledCards(flashcards);
-    setCurrentIndex(0);
-    setIsFlipped(false);
-  }, [flashcards]);
+  // Use flashcards directly or shuffled version
+  const cards = shuffledCards.length > 0 ? shuffledCards : flashcards;
   
   if (flashcards.length === 0) {
     return (
@@ -32,11 +28,8 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
     );
   }
   
-  // Use flashcards directly if shuffledCards hasn't been set yet
-  const cards = shuffledCards.length > 0 ? shuffledCards : flashcards;
-  const currentCard = cards[currentIndex];
+  const currentCard = cards[currentIndex] || cards[0];
   
-  // Safety check
   if (!currentCard) {
     return (
       <Card className="p-12 text-center">
@@ -73,7 +66,6 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
   
   return (
     <div className="space-y-6">
-      {/* Stats bar */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
           Card {currentIndex + 1} of {cards.length}
@@ -84,7 +76,6 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
         </Button>
       </div>
       
-      {/* Flashcard */}
       <div className="perspective-1000">
         <motion.div
           className="relative w-full aspect-[3/2] cursor-pointer"
@@ -93,7 +84,6 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
           animate={{ rotateY: isFlipped ? 180 : 0 }}
           transition={{ duration: 0.6, type: 'spring', stiffness: 100 }}
         >
-          {/* Front */}
           <Card 
             className="absolute inset-0 p-8 flex flex-col items-center justify-center backface-hidden"
             style={{ backfaceVisibility: 'hidden' }}
@@ -103,7 +93,7 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
             </div>
             <AnimatePresence mode="wait">
               <motion.p
-                key={`question-${currentIndex}`}
+                key={`question-\${currentIndex}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -117,7 +107,6 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
             </p>
           </Card>
           
-          {/* Back */}
           <Card 
             className="absolute inset-0 p-8 flex flex-col items-center justify-center backface-hidden bg-gradient-to-br from-primary/10 to-accent/10"
             style={{ 
@@ -130,7 +119,7 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
             </div>
             <AnimatePresence mode="wait">
               <motion.p
-                key={`answer-${currentIndex}`}
+                key={`answer-\${currentIndex}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -146,7 +135,6 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
         </motion.div>
       </div>
       
-      {/* Navigation */}
       <div className="flex items-center justify-center gap-4">
         <Button variant="outline" size="lg" onClick={handlePrev}>
           <ChevronLeft className="h-5 w-5" />
@@ -159,25 +147,24 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
         </Button>
       </div>
       
-      {/* Progress dots */}
       <div className="flex justify-center gap-1.5 flex-wrap max-h-20 overflow-auto py-2">
-        {shuffledCards.slice(0, 50).map((_, index) => (
+        {cards.slice(0, 50).map((_, index) => (
           <button
             key={index}
             onClick={() => {
               setIsFlipped(false);
               setCurrentIndex(index);
             }}
-            className={`w-2 h-2 rounded-full transition-all duration-200 ${
+            className={`w-2 h-2 rounded-full transition-all duration-200 \${
               index === currentIndex 
                 ? 'bg-primary w-4' 
                 : 'bg-muted hover:bg-muted-foreground/50'
             }`}
           />
         ))}
-        {shuffledCards.length > 50 && (
+        {cards.length > 50 && (
           <span className="text-xs text-muted-foreground ml-2">
-            +{shuffledCards.length - 50} more
+            +{cards.length - 50} more
           </span>
         )}
       </div>

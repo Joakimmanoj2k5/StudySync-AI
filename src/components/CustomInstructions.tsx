@@ -1,18 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { MessageSquare, Save, Trash2 } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
 import { getCustomInstructions, setCustomInstructions } from '@/utils/aiProcessor';
 
 export function CustomInstructions() {
-  const [instructions, setInstructions] = useState('');
+  // Initialize state directly from storage
+  const initialInstructions = useMemo(() => getCustomInstructions(), []);
+  const [instructions, setInstructions] = useState(initialInstructions);
   const [saved, setSaved] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  
-  useEffect(() => {
-    const stored = getCustomInstructions();
-    setInstructions(stored);
-  }, []);
   
   const handleSave = () => {
     setCustomInstructions(instructions);

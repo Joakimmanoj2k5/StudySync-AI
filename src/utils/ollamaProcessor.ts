@@ -187,7 +187,7 @@ async function streamOllamaResponse(
           if (parsed.done) {
             console.log('[Ollama] Response marked as done');
           }
-        } catch (e) {
+        } catch {
           // Skip malformed JSON chunks
           console.warn('[Ollama] Skipping malformed chunk:', line);
         }

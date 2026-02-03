@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, ChevronRight, RotateCcw, Trophy, ClipboardList, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button, Card, Progress } from '@/components/ui';
@@ -27,26 +27,22 @@ export function QuizView({ mcqs, fillBlanks }: QuizViewProps) {
   const [quizComplete, setQuizComplete] = useState(false);
   const [fillBlankInput, setFillBlankInput] = useState('');
   const [answeredQuestions, setAnsweredQuestions] = useState<boolean[]>([]);
-  const [shuffledQuestions, setShuffledQuestions] = useState<QuizItem[]>([]);
   const [answerHistory, setAnswerHistory] = useState<AnswerRecord[]>([]);
   const [showReview, setShowReview] = useState(false);
   const [expandedReview, setExpandedReview] = useState<Set<number>>(new Set());
+  const [shuffledQuestions, setShuffledQuestions] = useState<QuizItem[]>([]);
   
-  // Initialize questions when props change
-  useEffect(() => {
+  // Combine questions - shuffle happens on quiz start
+  const combinedQuestions = useMemo(() => {
     const combined: QuizItem[] = [
       ...mcqs.map(q => ({ ...q, type: 'mcq' as const })),
       ...fillBlanks.map(q => ({ ...q, type: 'fillBlank' as const })),
     ];
-    // Shuffle on initial load
-    const shuffled = [...combined].sort(() => Math.random() - 0.5);
-    setShuffledQuestions(shuffled);
-    setQuizStarted(false);
-    setCurrentIndex(0);
-    setScore(0);
+    return combined;
   }, [mcqs, fillBlanks]);
   
-  const allQuestions = shuffledQuestions;
+  // Use shuffled if available, otherwise combined
+  const allQuestions = shuffledQuestions.length > 0 ? shuffledQuestions : combinedQuestions;
   
   if (allQuestions.length === 0) {
     return (
@@ -80,7 +76,10 @@ export function QuizView({ mcqs, fillBlanks }: QuizViewProps) {
     setShowResult(false);
     setQuizComplete(false);
     setFillBlankInput('');
-    setAnsweredQuestions(new Array(allQuestions.length).fill(false));
+    // Shuffle questions on start
+    const shuffled = [...combinedQuestions].sort(() => Math.random() - 0.5);
+    setShuffledQuestions(shuffled);
+    setAnsweredQuestions(new Array(shuffled.length).fill(false));
     setAnswerHistory([]);
     setShowReview(false);
   };

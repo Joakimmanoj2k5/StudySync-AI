@@ -97,7 +97,7 @@ export function chunkText(text: string, options: Partial<ChunkOptions> = {}): Te
   
   while (currentStart < totalWords) {
     // Calculate the ideal end position
-    let idealEnd = currentStart + chunkSize;
+    const idealEnd = currentStart + chunkSize;
     
     // If this would be the last chunk, just take everything remaining
     if (idealEnd >= totalWords) {
