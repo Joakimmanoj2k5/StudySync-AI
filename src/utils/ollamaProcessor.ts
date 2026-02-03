@@ -97,7 +97,7 @@ Generate study materials as a JSON object:
     }
   ],
   "fillBlanks": [
-    {"sentence": "The process of _____ converts sunlight into chemical energy in plants.", "answer": "photosynthesis"}
+    {"sentence": "The process of _____ converts sunlight into chemical energy in plants.", "answer": "photosynthesis", "explanation": "Photosynthesis is the process by which plants use sunlight, water, and CO2 to produce glucose and oxygen."}
   ],
   "shortAnswers": [
     {"question": "Explain in detail how [process] works and give a real-world example.", "suggestedAnswer": "Comprehensive 3-4 sentence model answer..."}
@@ -106,8 +106,8 @@ Generate study materials as a JSON object:
 
 GENERATE EXACTLY:
 - 20 high-quality flashcards (covering definitions, processes, comparisons, significance)
-- 10 challenging MCQs (with plausible distractors and explanations)
-- 10 fill-in-the-blanks (for key terms, names, numbers, formulas)
+- 10 challenging MCQs (with plausible distractors and detailed explanations)
+- 10 fill-in-the-blanks (for key terms, names, numbers, formulas - include explanation for each)
 - 6 short answer questions (requiring deeper analysis)
 
 OUTPUT: Return ONLY valid JSON. No markdown, no explanations, just the JSON object.`;
@@ -274,9 +274,10 @@ function parseOllamaResponse(response: string): GeneratedContent {
       if (Array.isArray(parsed.fillBlanks)) {
         result.fillBlanks = parsed.fillBlanks
           .filter((f: { sentence?: string; answer?: string }) => f.sentence && f.answer)
-          .map((f: { sentence: string; answer: string }) => ({
+          .map((f: { sentence: string; answer: string; explanation?: string }) => ({
             sentence: f.sentence,
-            answer: f.answer
+            answer: f.answer,
+            explanation: f.explanation || ''
           }));
       }
       

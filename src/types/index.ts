@@ -19,6 +19,7 @@ export interface FillInBlank {
   id: string;
   sentence: string;
   answer: string;
+  explanation?: string;
   chunkIndex: number;
 }
 

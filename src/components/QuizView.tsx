@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, ChevronRight, RotateCcw, Trophy, ClipboardList } from 'lucide-react';
+import { CheckCircle, XCircle, ChevronRight, RotateCcw, Trophy, ClipboardList, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button, Card, Progress } from '@/components/ui';
 import type { MCQ, FillInBlank } from '@/types';
 import { cn } from '@/lib/utils';
@@ -12,6 +12,12 @@ interface QuizViewProps {
 
 type QuizItem = (MCQ & { type: 'mcq' }) | (FillInBlank & { type: 'fillBlank' });
 
+interface AnswerRecord {
+  question: QuizItem;
+  userAnswer: number | string;
+  isCorrect: boolean;
+}
+
 export function QuizView({ mcqs, fillBlanks }: QuizViewProps) {
   const [quizStarted, setQuizStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -22,6 +28,9 @@ export function QuizView({ mcqs, fillBlanks }: QuizViewProps) {
   const [fillBlankInput, setFillBlankInput] = useState('');
   const [answeredQuestions, setAnsweredQuestions] = useState<boolean[]>([]);
   const [shuffledQuestions, setShuffledQuestions] = useState<QuizItem[]>([]);
+  const [answerHistory, setAnswerHistory] = useState<AnswerRecord[]>([]);
+  const [showReview, setShowReview] = useState(false);
+  const [expandedReview, setExpandedReview] = useState<Set<number>>(new Set());
   
   // Initialize questions when props change
   useEffect(() => {
@@ -72,6 +81,8 @@ export function QuizView({ mcqs, fillBlanks }: QuizViewProps) {
     setQuizComplete(false);
     setFillBlankInput('');
     setAnsweredQuestions(new Array(allQuestions.length).fill(false));
+    setAnswerHistory([]);
+    setShowReview(false);
   };
   
   const handleSelectAnswer = (answer: number | string) => {
@@ -83,6 +94,7 @@ export function QuizView({ mcqs, fillBlanks }: QuizViewProps) {
     if (selectedAnswer === null && fillBlankInput === '') return;
     
     let isCorrect = false;
+    const userAnswer = currentQuestion.type === 'mcq' ? selectedAnswer : fillBlankInput;
     
     if (currentQuestion.type === 'mcq') {
       isCorrect = selectedAnswer === currentQuestion.correctIndex;
@@ -97,6 +109,13 @@ export function QuizView({ mcqs, fillBlanks }: QuizViewProps) {
     const newAnswered = [...answeredQuestions];
     newAnswered[currentIndex] = isCorrect;
     setAnsweredQuestions(newAnswered);
+    
+    // Track answer history
+    setAnswerHistory(prev => [...prev, {
+      question: currentQuestion,
+      userAnswer: userAnswer!,
+      isCorrect
+    }]);
     
     setShowResult(true);
   };
@@ -146,59 +165,204 @@ export function QuizView({ mcqs, fillBlanks }: QuizViewProps) {
   
   // Quiz complete screen
   if (quizComplete) {
+    const toggleReviewItem = (index: number) => {
+      setExpandedReview(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(index)) {
+          newSet.delete(index);
+        } else {
+          newSet.add(index);
+        }
+        return newSet;
+      });
+    };
+
     return (
-      <Card className="p-8 text-center">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="max-w-md mx-auto"
-        >
-          <div className="p-4 rounded-full bg-success/10 w-fit mx-auto mb-6">
-            <Trophy className="h-10 w-10 text-success" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">Quiz Complete!</h2>
-          <p className="text-muted-foreground mb-6">
-            You've finished all the questions
-          </p>
-          
-          <div className="relative w-32 h-32 mx-auto mb-6">
-            <svg className="w-full h-full transform -rotate-90">
-              <circle
-                cx="64"
-                cy="64"
-                r="56"
-                stroke="currentColor"
-                strokeWidth="8"
-                fill="none"
-                className="text-muted"
-              />
-              <circle
-                cx="64"
-                cy="64"
-                r="56"
-                stroke="currentColor"
-                strokeWidth="8"
-                fill="none"
-                strokeDasharray={`${scorePercentage * 3.52} 352`}
-                className="text-success transition-all duration-1000"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-3xl font-bold">{scorePercentage}%</span>
+      <div className="space-y-6">
+        <Card className="p-8 text-center">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="max-w-md mx-auto"
+          >
+            <div className="p-4 rounded-full bg-success/10 w-fit mx-auto mb-6">
+              <Trophy className="h-10 w-10 text-success" />
             </div>
-          </div>
-          
-          <p className="text-lg mb-6">
-            You scored <span className="font-bold text-success">{score}</span> out of{' '}
-            <span className="font-bold">{allQuestions.length}</span>
-          </p>
-          
-          <Button onClick={handleStartQuiz} size="lg">
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Try Again
-          </Button>
-        </motion.div>
-      </Card>
+            <h2 className="text-2xl font-bold mb-2">Quiz Complete!</h2>
+            <p className="text-muted-foreground mb-6">
+              You've finished all the questions
+            </p>
+            
+            <div className="relative w-32 h-32 mx-auto mb-6">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle
+                  cx="64"
+                  cy="64"
+                  r="56"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="none"
+                  className="text-muted"
+                />
+                <circle
+                  cx="64"
+                  cy="64"
+                  r="56"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="none"
+                  strokeDasharray={`${scorePercentage * 3.52} 352`}
+                  className="text-success transition-all duration-1000"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-3xl font-bold">{scorePercentage}%</span>
+              </div>
+            </div>
+            
+            <p className="text-lg mb-6">
+              You scored <span className="font-bold text-success">{score}</span> out of{' '}
+              <span className="font-bold">{allQuestions.length}</span>
+            </p>
+            
+            <div className="flex gap-3 justify-center">
+              <Button onClick={handleStartQuiz} size="lg">
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
+              <Button 
+                variant="outline" 
+                size="lg"
+                onClick={() => setShowReview(!showReview)}
+              >
+                <Lightbulb className="h-4 w-4 mr-2" />
+                {showReview ? 'Hide Review' : 'Review Answers'}
+              </Button>
+            </div>
+          </motion.div>
+        </Card>
+
+        {/* Review Section */}
+        <AnimatePresence>
+          {showReview && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-4"
+            >
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-primary" />
+                Review All Questions with Explanations
+              </h3>
+              
+              {answerHistory.map((record, index) => (
+                <Card key={index} className="overflow-hidden">
+                  <button
+                    onClick={() => toggleReviewItem(index)}
+                    className="w-full p-4 flex items-start justify-between text-left hover:bg-secondary/50 transition-colors"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className={cn(
+                        "flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium flex-shrink-0",
+                        record.isCorrect 
+                          ? "bg-success/10 text-success" 
+                          : "bg-destructive/10 text-destructive"
+                      )}>
+                        {record.isCorrect ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                      </span>
+                      <div>
+                        <span className={cn(
+                          "px-2 py-0.5 rounded text-xs font-medium mr-2",
+                          record.question.type === 'mcq' 
+                            ? "bg-primary/10 text-primary" 
+                            : "bg-accent/10 text-accent"
+                        )}>
+                          {record.question.type === 'mcq' ? 'MCQ' : 'Fill Blank'}
+                        </span>
+                        <p className="font-medium mt-1 line-clamp-2">
+                          {record.question.type === 'mcq' 
+                            ? record.question.question 
+                            : record.question.sentence}
+                        </p>
+                      </div>
+                    </div>
+                    {expandedReview.has(index) ? (
+                      <ChevronUp className="h-5 w-5 text-muted-foreground flex-shrink-0 ml-2" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0 ml-2" />
+                    )}
+                  </button>
+                  
+                  <AnimatePresence>
+                    {expandedReview.has(index) && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="px-4 pb-4 space-y-3"
+                      >
+                        {/* Your Answer */}
+                        <div className={cn(
+                          "p-3 rounded-lg",
+                          record.isCorrect ? "bg-success/10" : "bg-destructive/10"
+                        )}>
+                          <p className="text-sm font-medium mb-1">Your Answer:</p>
+                          <p className={cn(
+                            "text-sm",
+                            record.isCorrect ? "text-success" : "text-destructive"
+                          )}>
+                            {record.question.type === 'mcq' 
+                              ? record.question.options[record.userAnswer as number]
+                              : record.userAnswer}
+                          </p>
+                        </div>
+                        
+                        {/* Correct Answer */}
+                        {!record.isCorrect && (
+                          <div className="p-3 rounded-lg bg-success/10">
+                            <p className="text-sm font-medium mb-1">Correct Answer:</p>
+                            <p className="text-sm text-success">
+                              {record.question.type === 'mcq' 
+                                ? record.question.options[record.question.correctIndex]
+                                : record.question.answer}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Explanation */}
+                        {record.question.type === 'mcq' && record.question.explanation && (
+                          <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+                            <p className="text-sm font-medium mb-1 flex items-center gap-2">
+                              <Lightbulb className="h-4 w-4 text-primary" />
+                              Explanation:
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {record.question.explanation}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {record.question.type === 'fillBlank' && record.question.explanation && (
+                          <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+                            <p className="text-sm font-medium mb-1 flex items-center gap-2">
+                              <Lightbulb className="h-4 w-4 text-primary" />
+                              Explanation:
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {record.question.explanation}
+                            </p>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </Card>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     );
   }
   
@@ -283,10 +447,25 @@ export function QuizView({ mcqs, fillBlanks }: QuizViewProps) {
                   )}
                 />
                 {showResult && (
-                  <p className="text-sm">
-                    <span className="text-muted-foreground">Correct answer: </span>
-                    <span className="font-medium text-success">{currentQuestion.answer}</span>
-                  </p>
+                  <div className="space-y-2">
+                    <p className="text-sm">
+                      <span className="text-muted-foreground">Correct answer: </span>
+                      <span className="font-medium text-success">{currentQuestion.answer}</span>
+                    </p>
+                    {currentQuestion.explanation && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-3 rounded-lg bg-primary/10 border border-primary/20"
+                      >
+                        <p className="text-sm font-medium mb-1 flex items-center gap-2">
+                          <Lightbulb className="h-4 w-4 text-primary" />
+                          Explanation:
+                        </p>
+                        <p className="text-sm text-muted-foreground">{currentQuestion.explanation}</p>
+                      </motion.div>
+                    )}
+                  </div>
                 )}
               </div>
             )}
@@ -295,9 +474,13 @@ export function QuizView({ mcqs, fillBlanks }: QuizViewProps) {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-4 p-4 rounded-lg bg-secondary"
+                className="mt-4 p-4 rounded-lg bg-primary/10 border border-primary/20"
               >
-                <p className="text-sm text-muted-foreground">{currentQuestion.explanation}</p>
+                <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4 text-primary" />
+                  Explanation:
+                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{currentQuestion.explanation}</p>
               </motion.div>
             )}
           </Card>
