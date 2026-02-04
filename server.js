@@ -34,7 +34,7 @@ app.get('/api/health', (req, res) => {
 // Gemini API Proxy
 app.post('/api/gemini/generate', async (req, res) => {
   try {
-    const { prompt, model = 'gemini-1.5-flash' } = req.body;
+    const { prompt, model = 'gemini-2.0-flash' } = req.body;
     
     if (!API_KEYS.gemini) {
       return res.status(500).json({ error: 'Gemini API key not configured' });

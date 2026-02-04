@@ -16,6 +16,11 @@ const API_CONFIG = {
   groq: import.meta.env.VITE_GROQ_API_KEY || ''
 };
 
+// Debug: Log API key status (not the actual keys)
+console.log('[AIAdapter] Environment:', IS_PRODUCTION ? 'PRODUCTION' : 'DEVELOPMENT');
+console.log('[AIAdapter] Gemini key loaded:', API_CONFIG.gemini ? 'YES (' + API_CONFIG.gemini.substring(0, 8) + '...)' : 'NO');
+console.log('[AIAdapter] Groq key loaded:', API_CONFIG.groq ? 'YES (' + API_CONFIG.groq.substring(0, 8) + '...)' : 'NO');
+
 // Provider types
 export type AIProvider = 'ollama' | 'gemini' | 'groq';
 
@@ -36,7 +41,7 @@ export interface GeneratedContent {
 // Default models for each provider
 const DEFAULT_MODELS: Record<AIProvider, string> = {
   ollama: 'llama3.2',
-  gemini: 'gemini-1.5-flash',
+  gemini: 'gemini-2.0-flash',
   groq: 'llama-3.3-70b-versatile'
 };
 
@@ -331,7 +336,7 @@ async function callGemini(prompt: string, onProgress?: (text: string) => void): 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         prompt, 
-        model: currentConfig.model || 'gemini-1.5-flash' 
+        model: currentConfig.model || 'gemini-2.0-flash' 
       })
     });
 
@@ -352,7 +357,7 @@ async function callGemini(prompt: string, onProgress?: (text: string) => void): 
     throw new Error('Gemini API key not configured');
   }
 
-  const model = currentConfig.model || 'gemini-1.5-flash';
+  const model = currentConfig.model || 'gemini-2.0-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const response = await fetch(url, {
