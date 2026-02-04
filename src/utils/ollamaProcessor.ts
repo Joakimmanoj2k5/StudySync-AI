@@ -23,94 +23,30 @@ export function getCustomInstructions(): string {
   return customInstructions;
 }
 
-// System prompt for intelligent study material generation
-const SYLLABUS_SYSTEM_PROMPT = `You are an expert university professor and educational content creator with 20+ years of experience. Your job is to help students truly UNDERSTAND and MASTER topics, not just memorize facts.
-
-CRITICAL RULES:
-1. If the content is just a TOPIC NAME or SHORT PHRASE (like "Photosynthesis" or "World War 2"), you MUST use your knowledge to create comprehensive study materials about that topic
-2. Research and include REAL facts, dates, names, formulas, processes, and detailed explanations
-3. Questions should test UNDERSTANDING, not just recall
-4. All answers must be EDUCATIONAL and DETAILED (minimum 2-3 sentences)
-5. MCQ wrong options must be PLAUSIBLE (not obviously wrong)
-6. Every question should teach something valuable
-
-QUESTION TYPES TO GENERATE:
-
-FLASHCARDS - Create these types:
-- "What is X?" → Full definition with context
-- "Explain the process of X" → Step-by-step breakdown
-- "What are the key characteristics of X?" → List with explanations
-- "Compare X and Y" → Detailed comparison
-- "What is the significance/importance of X?" → Why it matters
-- "What causes X?" / "What are the effects of X?" → Cause-effect relationships
-
-MCQs - Test different cognitive levels:
-- Knowledge: "Which of the following is true about X?"
-- Comprehension: "What does X primarily demonstrate?"
-- Application: "In which scenario would X be most applicable?"
-- Analysis: "What is the main difference between X and Y?"
-- Evaluation: "Which factor is MOST important in X?"
-
-FILL-IN-BLANKS - Focus on:
-- Key terminology and definitions
-- Important names, dates, numbers
-- Formulas and equations
-- Cause-effect relationships
-
-SHORT ANSWER - Ask for:
-- Explanations of processes
-- Analysis of relationships
-- Evaluation of significance
-- Real-world applications`;
-
-// Prompt template for generating study materials
+// Prompt template for generating study materials - OPTIMIZED FOR SPEED
 function getStudyMaterialsPrompt(text: string): string {
   const userInstructions = getCustomInstructions();
-  const additionalContext = userInstructions ? `\n\nUSER'S SPECIAL INSTRUCTIONS: ${userInstructions}` : '';
+  const additionalContext = userInstructions ? `\nUSER NOTES: ${userInstructions}` : '';
   
-  return `${SYLLABUS_SYSTEM_PROMPT}${additionalContext}
+  return `You are an expert educator. Generate study materials for this topic.${additionalContext}
 
-TOPIC/CONTENT TO STUDY:
-"""
-${text}
-"""
+TOPIC: ${text}
 
-INSTRUCTIONS:
-1. If the above is just a topic name, USE YOUR KNOWLEDGE to create comprehensive study materials
-2. Cover ALL aspects: definitions, processes, history, applications, examples, formulas (if applicable)
-3. Make questions that would appear in actual exams
-4. Ensure answers are COMPLETE and EDUCATIONAL
+Rules:
+- If just a topic name, use your knowledge
+- Create exam-quality questions
+- Be concise but educational
 
-Generate study materials as a JSON object:
+Return ONLY this JSON format:
 {
-  "flashcards": [
-    {"question": "What is [concept]?", "answer": "Detailed 2-3 sentence answer with examples..."},
-    {"question": "Explain the process of [X]", "answer": "Step 1: ... Step 2: ... Step 3: ..."},
-    {"question": "Why is [X] important?", "answer": "Explanation of significance..."}
-  ],
-  "mcqs": [
-    {
-      "question": "Clear question testing understanding?",
-      "options": ["Correct answer (detailed)", "Plausible wrong option 1", "Plausible wrong option 2", "Plausible wrong option 3"],
-      "correctIndex": 0,
-      "explanation": "The answer is A because... This is important because..."
-    }
-  ],
-  "fillBlanks": [
-    {"sentence": "The process of _____ converts sunlight into chemical energy in plants.", "answer": "photosynthesis", "explanation": "Photosynthesis is the process by which plants use sunlight, water, and CO2 to produce glucose and oxygen."}
-  ],
-  "shortAnswers": [
-    {"question": "Explain in detail how [process] works and give a real-world example.", "suggestedAnswer": "Comprehensive 3-4 sentence model answer..."}
-  ]
+  "flashcards": [{"question": "Q", "answer": "A (2-3 sentences)"}],
+  "mcqs": [{"question": "Q", "options": ["A","B","C","D"], "correctIndex": 0, "explanation": "Why A is correct"}],
+  "fillBlanks": [{"sentence": "Text with _____", "answer": "word", "explanation": "Brief context"}],
+  "shortAnswers": [{"question": "Q requiring analysis", "suggestedAnswer": "Model answer"}]
 }
 
-GENERATE EXACTLY:
-- 20 high-quality flashcards (covering definitions, processes, comparisons, significance)
-- 10 challenging MCQs (with plausible distractors and detailed explanations)
-- 10 fill-in-the-blanks (for key terms, names, numbers, formulas - include explanation for each)
-- 6 short answer questions (requiring deeper analysis)
-
-OUTPUT: Return ONLY valid JSON. No markdown, no explanations, just the JSON object.`;
+GENERATE: 12 flashcards, 6 MCQs, 6 fill-blanks, 4 short answers.
+OUTPUT: Valid JSON only, no markdown.`;
 }
 
 interface OllamaResponse {
@@ -144,9 +80,16 @@ async function streamOllamaResponse(
       stream: true,
       format: 'json',
       options: {
-        temperature: 0.7,
-        num_predict: 8192,  // Increased for more content
-        num_ctx: 4096,      // Context window
+        // Speed optimizations
+        temperature: 0.5,      // Lower = faster, more deterministic
+        num_predict: 3000,     // Limit output tokens for speed
+        num_ctx: 2048,         // Smaller context = faster processing
+        num_thread: 0,         // 0 = auto-detect optimal threads
+        num_batch: 512,        // Larger batch size for throughput
+        num_gpu: 99,           // Use all GPU layers if available
+        top_k: 20,             // Limit sampling pool for speed
+        top_p: 0.8,            // Nucleus sampling threshold
+        repeat_penalty: 1.1,   // Slight penalty to avoid repetition
       }
     }),
   });
@@ -215,9 +158,16 @@ async function callOllamaAPI(prompt: string): Promise<string> {
       stream: false,
       format: 'json',
       options: {
-        temperature: 0.7,
-        num_predict: 8192,  // Increased for more content
-        num_ctx: 4096,
+        // Speed optimizations (same as streaming)
+        temperature: 0.5,
+        num_predict: 3000,
+        num_ctx: 2048,
+        num_thread: 0,
+        num_batch: 512,
+        num_gpu: 99,
+        top_k: 20,
+        top_p: 0.8,
+        repeat_penalty: 1.1,
       }
     }),
   });

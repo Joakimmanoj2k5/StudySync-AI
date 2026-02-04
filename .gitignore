@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# API Keys - NEVER COMMIT
+src/config/apiKeys.ts
+.env
+.env.local
+.env.production
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

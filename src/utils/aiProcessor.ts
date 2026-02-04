@@ -1,13 +1,31 @@
 /**
- * AI Processor - Now uses local Ollama with llama3.2
- * Falls back to local generation if Ollama is unavailable
+ * AI Processor - Multi-provider support (Ollama, Gemini, Groq)
+ * Re-exports from aiAdapter for backwards compatibility
  */
 
-// Re-export everything from ollamaProcessor for backwards compatibility
 export {
+  // Main processing
   processChunk,
+  splitIntoChunks,
+  
+  // Configuration
+  loadConfig,
+  saveConfig,
+  getConfig,
+  setProvider,
+  setApiKey,
+  getApiKey,
   setCustomInstructions,
   getCustomInstructions,
+  
+  // Status checks
+  checkProviderStatus,
   checkOllamaStatus,
-  splitIntoChunks
-} from './ollamaProcessor';
+  checkGeminiStatus,
+  checkGroqStatus,
+  
+  // Types
+  type AIProvider,
+  type AIConfig,
+  type GeneratedContent
+} from './aiAdapter';

@@ -4,6 +4,7 @@
  */
 
 import * as pdfjsLib from 'pdfjs-dist';
+import type { TextItem } from 'pdfjs-dist/types/src/display/api';
 import PdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import Tesseract from 'tesseract.js';
 
@@ -47,7 +48,7 @@ async function renderPageToImage(page: pdfjsLib.PDFPageProxy, scale: number = 2.
     canvasContext: context,
     viewport: viewport,
     canvas: canvas,
-  } as any).promise;
+  } as Parameters<typeof page.render>[0]).promise;
   
   return canvas.toDataURL('image/png');
 }
@@ -113,7 +114,8 @@ export async function extractTextFromPDF(
       // First, try to extract text directly
       const textContent = await page.getTextContent();
       let pageText = textContent.items
-        .map((item: any) => item.str)
+        .filter((item): item is TextItem => 'str' in item)
+        .map((item) => item.str)
         .join(' ')
         .trim();
       
@@ -150,7 +152,7 @@ export async function extractTextFromPDF(
     try {
       const metadataObj = await pdf.getMetadata();
       if (metadataObj?.info) {
-        const info = metadataObj.info as any;
+        const info = metadataObj.info as Record<string, string>;
         metadata = {
           title: info.Title,
           author: info.Author,

@@ -8,7 +8,7 @@ import { QuizView } from './QuizView';
 import { ExamView } from './ExamView';
 import { StudyBankList } from './StudyBankList';
 import { CustomInstructions } from './CustomInstructions';
-import { OllamaStatus } from './OllamaStatus';
+import { AIProviderStatus } from './AIProviderStatus';
 import { useStudy } from '@/context/StudyContext';
 import type { StudyBank } from '@/types';
 
@@ -36,10 +36,10 @@ export function Dashboard() {
               </div>
               <div>
                 <h1 className="text-xl font-bold gradient-text">StudySync AI</h1>
-                <p className="text-xs text-muted-foreground">Local AI-Powered Study Materials</p>
+                <p className="text-xs text-muted-foreground">AI-Powered Study Materials</p>
               </div>
             </div>
-            <OllamaStatus />
+            <AIProviderStatus />
           </div>
         </div>
       </header>
