@@ -9,16 +9,12 @@ import type { Flashcard, MCQ, FillInBlank, ShortAnswer } from '../types';
 // Check if we're in production (using server proxy) or development (direct API calls)
 const IS_PRODUCTION = import.meta.env.PROD;
 
-// For development only - import local keys
-let API_CONFIG: { gemini: string; groq: string } = { gemini: '', groq: '' };
-if (!IS_PRODUCTION) {
-  try {
-    const config = await import('../config/apiKeys');
-    API_CONFIG = config.API_CONFIG;
-  } catch {
-    console.log('[AIAdapter] No local API keys found, using server proxy');
-  }
-}
+// API keys from environment variables (for development)
+// In production, we use server-side proxy so keys aren't needed client-side
+const API_CONFIG = {
+  gemini: import.meta.env.VITE_GEMINI_API_KEY || '',
+  groq: import.meta.env.VITE_GROQ_API_KEY || ''
+};
 
 // Provider types
 export type AIProvider = 'ollama' | 'gemini' | 'groq';
