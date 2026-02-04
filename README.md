@@ -1,74 +1,55 @@
-# React + TypeScript + Vite
+# 📚 StudySync AI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **Free AI-Powered Study Material Generator** - Create unlimited flashcards, MCQs, fill-in-the-blanks, and exam questions from any PDF or text!
 
-Currently, two official plugins are available:
+🔗 **[Try it Live → aii-delta.vercel.app](https://aii-delta.vercel.app)**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![StudySync AI](https://img.shields.io/badge/AI-Powered-6366f1?style=for-the-badge)
+![Free](https://img.shields.io/badge/100%25-Free-22c55e?style=for-the-badge)
+![No Login](https://img.shields.io/badge/No-Login%20Required-8b5cf6?style=for-the-badge)
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ✨ Features
 
-## Expanding the ESLint configuration
+- 🃏 **Flashcards** - Auto-generated Q&A cards for memorization
+- ❓ **MCQ Quizzes** - Multiple choice questions with explanations
+- ✏️ **Fill in the Blanks** - Test your knowledge interactively
+- 📝 **Exam Mode** - Short answer questions for deep learning
+- 📄 **PDF Support** - Upload any PDF and get instant study materials
+- 🤖 **Multiple AI Models** - Powered by Gemini & Groq
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🚀 How to Use
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. Visit [aii-delta.vercel.app](https://aii-delta.vercel.app)
+2. Upload a PDF or paste text
+3. Get instant AI-generated study materials
+4. Study with flashcards, quizzes, or exam mode!
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🛠️ Tech Stack
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **Frontend**: React 19 + TypeScript + Vite
+- **Styling**: Tailwind CSS + Framer Motion
+- **AI**: Google Gemini, Groq (Llama 3.3)
+- **Hosting**: Vercel
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-# Deployed Wed Feb  4 17:09:21 IST 2026
+---
+
+## 📖 Use Cases
+
+- 📚 **Students** - Turn lecture notes into study materials
+- 👨‍🏫 **Teachers** - Generate quizzes from textbooks
+- 💼 **Professionals** - Learn new topics quickly
+- 📖 **Self-learners** - Master any subject with AI assistance
+
+---
+
+## 🌟 Star this repo if you find it useful!
+
+Made with ❤️ for students everywhere.
+
+**[→ Start Studying Now](https://aii-delta.vercel.app)**
