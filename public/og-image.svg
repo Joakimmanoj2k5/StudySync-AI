@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a2e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Decorative circles -->
+  <circle cx="100" cy="100" r="200" fill="#6366f1" opacity="0.1"/>
+  <circle cx="1100" cy="530" r="250" fill="#8b5cf6" opacity="0.1"/>
+  
+  <!-- Logo icon -->
+  <rect x="100" y="200" width="80" height="80" rx="16" fill="url(#accent)"/>
+  <text x="140" y="258" font-family="Arial, sans-serif" font-size="45" font-weight="bold" fill="white" text-anchor="middle">S</text>
+  <circle cx="165" cy="215" r="12" fill="#22c55e"/>
+  
+  <!-- Title -->
+  <text x="200" y="255" font-family="Arial, sans-serif" font-size="52" font-weight="bold" fill="white">StudySync AI</text>
+  
+  <!-- Subtitle -->
+  <text x="100" y="340" font-family="Arial, sans-serif" font-size="32" fill="#a1a1aa">Free AI-Powered Study Material Generator</text>
+  
+  <!-- Features -->
+  <text x="100" y="420" font-family="Arial, sans-serif" font-size="24" fill="#6366f1">✓ Flashcards</text>
+  <text x="320" y="420" font-family="Arial, sans-serif" font-size="24" fill="#8b5cf6">✓ MCQ Quizzes</text>
+  <text x="540" y="420" font-family="Arial, sans-serif" font-size="24" fill="#22c55e">✓ Fill in Blanks</text>
+  <text x="780" y="420" font-family="Arial, sans-serif" font-size="24" fill="#f59e0b">✓ Exam Mode</text>
+  
+  <!-- CTA -->
+  <rect x="100" y="480" width="280" height="60" rx="12" fill="url(#accent)"/>
+  <text x="240" y="520" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="white" text-anchor="middle">Upload PDF & Start Free</text>
+  
+  <!-- URL -->
+  <text x="1100" y="580" font-family="Arial, sans-serif" font-size="20" fill="#71717a" text-anchor="end">aii-delta.vercel.app</text>
+</svg>
