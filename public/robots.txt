@@ -1,9 +1,9 @@
-# StudySync AI - Robots.txt
+# LearnAI - Robots.txt
 User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://aii-delta.vercel.app/sitemap.xml
+Sitemap: https://learnusingai.vercel.app/sitemap.xml
 
-# Crawl-delay (optional, be nice to servers)
+# Crawl-delay
 Crawl-delay: 1

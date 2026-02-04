@@ -1,10 +1,10 @@
-# 📚 StudySync AI
+# 📚 LearnAI
 
 > **Free AI-Powered Study Material Generator** - Create unlimited flashcards, MCQs, fill-in-the-blanks, and exam questions from any PDF or text!
 
-🔗 **[Try it Live → aii-delta.vercel.app](https://aii-delta.vercel.app)**
+🔗 **[Try it Live → learnusingai.vercel.app](https://learnusingai.vercel.app)**
 
-![StudySync AI](https://img.shields.io/badge/AI-Powered-6366f1?style=for-the-badge)
+![LearnAI](https://img.shields.io/badge/AI-Powered-6366f1?style=for-the-badge)
 ![Free](https://img.shields.io/badge/100%25-Free-22c55e?style=for-the-badge)
 ![No Login](https://img.shields.io/badge/No-Login%20Required-8b5cf6?style=for-the-badge)
 
@@ -23,7 +23,7 @@
 
 ## 🚀 How to Use
 
-1. Visit [aii-delta.vercel.app](https://aii-delta.vercel.app)
+1. Visit [learnusingai.vercel.app](https://learnusingai.vercel.app)
 2. Upload a PDF or paste text
 3. Get instant AI-generated study materials
 4. Study with flashcards, quizzes, or exam mode!
@@ -48,8 +48,8 @@
 
 ---
 
-## 🌟 Star this repo if you find it useful!
+## �� Star this repo if you find it useful!
 
 Made with ❤️ for students everywhere.
 
-**[→ Start Studying Now](https://aii-delta.vercel.app)**
+**[→ Start Learning Now](https://learnusingai.vercel.app)**

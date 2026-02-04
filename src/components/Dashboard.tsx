@@ -35,7 +35,7 @@ export function Dashboard() {
                 <Brain className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold gradient-text">StudySync AI</h1>
+                <h1 className="text-xl font-bold gradient-text">LearnAI</h1>
                 <p className="text-xs text-muted-foreground">AI-Powered Study Materials</p>
               </div>
             </div>
@@ -188,7 +188,7 @@ export function Dashboard() {
                   <div className="p-4 rounded-full bg-primary/10 w-fit mx-auto mb-6">
                     <GraduationCap className="h-12 w-12 text-primary" />
                   </div>
-                  <h2 className="text-2xl font-bold mb-4">Welcome to StudySync AI</h2>
+                  <h2 className="text-2xl font-bold mb-4">Welcome to LearnAI</h2>
                   <p className="text-muted-foreground max-w-md mx-auto mb-8">
                     Upload a PDF or text file to generate unlimited flashcards, quizzes, and exam questions using AI.
                   </p>
@@ -220,7 +220,7 @@ export function Dashboard() {
       <footer className="border-t border-border/50 mt-12">
         <div className="container mx-auto px-4 py-6">
           <p className="text-center text-sm text-muted-foreground">
-            <span className="gradient-text font-medium">StudySync AI</span>
+            <span className="gradient-text font-medium">LearnAI</span>
           </p>
         </div>
       </footer>
