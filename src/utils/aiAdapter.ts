@@ -55,7 +55,7 @@ const STORAGE_KEYS = {
 
 // Current configuration
 let currentConfig: AIConfig = {
-  provider: 'ollama'
+  provider: 'groq'
 };
 
 let customInstructions = '';
@@ -66,7 +66,7 @@ let customInstructions = '';
 
 export function loadConfig(): AIConfig {
   try {
-    const provider = (localStorage.getItem(STORAGE_KEYS.provider) as AIProvider) || 'ollama';
+    const provider = (localStorage.getItem(STORAGE_KEYS.provider) as AIProvider) || 'groq';
     const geminiKey = localStorage.getItem(STORAGE_KEYS.geminiKey) || '';
     const groqKey = localStorage.getItem(STORAGE_KEYS.groqKey) || '';
     customInstructions = localStorage.getItem(STORAGE_KEYS.customInstructions) || '';
