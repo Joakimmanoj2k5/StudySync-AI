@@ -199,8 +199,8 @@ export function Dashboard() {
                       <p className="text-xs text-muted-foreground">Flip & memorize</p>
                     </div>
                     <div className="p-4 rounded-lg bg-secondary/50">
-                      <FileQuestion className="h-6 w-6 text-accent mx-auto mb-2" />
-                      <p className="text-sm font-medium">Quiz Mode</p>
+                      <Sparkles className="h-6 w-6 text-accent mx-auto mb-2" />
+                      <p className="text-sm font-medium">Fill in the Blanks</p>
                       <p className="text-xs text-muted-foreground">Test yourself</p>
                     </div>
                     <div className="p-4 rounded-lg bg-secondary/50">
@@ -220,8 +220,7 @@ export function Dashboard() {
       <footer className="border-t border-border/50 mt-12">
         <div className="container mx-auto px-4 py-6">
           <p className="text-center text-sm text-muted-foreground">
-            Powered by Local Ollama + Llama 3.2 • 
-            <span className="gradient-text font-medium ml-1">StudySync AI</span>
+            <span className="gradient-text font-medium">StudySync AI</span>
           </p>
         </div>
       </footer>
