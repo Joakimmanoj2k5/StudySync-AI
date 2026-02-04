@@ -104,36 +104,48 @@ export function Dashboard() {
                     </div>
                   </div>
                   
-                  {/* Stats */}
+                  {/* Stats - Clickable to switch tabs */}
                   <div className="grid grid-cols-4 gap-4 mt-6">
-                    <div className="p-4 rounded-lg bg-secondary/50">
+                    <button 
+                      onClick={() => setActiveTab('flashcards')}
+                      className={`p-4 rounded-lg bg-secondary/50 text-left transition-all hover:bg-secondary/80 hover:scale-105 ${activeTab === 'flashcards' ? 'ring-2 ring-primary' : ''}`}
+                    >
                       <div className="flex items-center gap-2 text-primary mb-2">
                         <BookOpen className="h-4 w-4" />
                         <span className="text-xs font-medium">Flashcards</span>
                       </div>
                       <p className="text-2xl font-bold">{activeBank.flashcards.length}</p>
-                    </div>
-                    <div className="p-4 rounded-lg bg-secondary/50">
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('quiz')}
+                      className={`p-4 rounded-lg bg-secondary/50 text-left transition-all hover:bg-secondary/80 hover:scale-105 ${activeTab === 'quiz' ? 'ring-2 ring-accent' : ''}`}
+                    >
                       <div className="flex items-center gap-2 text-accent mb-2">
                         <FileQuestion className="h-4 w-4" />
                         <span className="text-xs font-medium">MCQs</span>
                       </div>
                       <p className="text-2xl font-bold">{activeBank.mcqs.length}</p>
-                    </div>
-                    <div className="p-4 rounded-lg bg-secondary/50">
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('quiz')}
+                      className={`p-4 rounded-lg bg-secondary/50 text-left transition-all hover:bg-secondary/80 hover:scale-105 ${activeTab === 'quiz' ? 'ring-2 ring-success' : ''}`}
+                    >
                       <div className="flex items-center gap-2 text-success mb-2">
                         <Sparkles className="h-4 w-4" />
                         <span className="text-xs font-medium">Fill Blanks</span>
                       </div>
                       <p className="text-2xl font-bold">{activeBank.fillBlanks.length}</p>
-                    </div>
-                    <div className="p-4 rounded-lg bg-secondary/50">
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('exam')}
+                      className={`p-4 rounded-lg bg-secondary/50 text-left transition-all hover:bg-secondary/80 hover:scale-105 ${activeTab === 'exam' ? 'ring-2 ring-warning' : ''}`}
+                    >
                       <div className="flex items-center gap-2 text-warning mb-2">
                         <GraduationCap className="h-4 w-4" />
                         <span className="text-xs font-medium">Short Answer</span>
                       </div>
                       <p className="text-2xl font-bold">{activeBank.shortAnswers.length}</p>
-                    </div>
+                    </button>
                   </div>
                 </Card>
                 
