@@ -1,13 +1,18 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, ChevronRight, RotateCcw, Trophy, ClipboardList, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle, XCircle, ChevronRight, RotateCcw, Trophy, ClipboardList, Lightbulb, ChevronDown, ChevronUp, Star, RefreshCw } from 'lucide-react';
 import { Button, Card, Progress } from '@/components/ui';
 import type { MCQ, FillInBlank } from '@/types';
 import { cn } from '@/lib/utils';
+import { toggleFavorite } from '@/utils/favorites';
+import { recordStudySession } from '@/utils/progress';
 
 interface QuizViewProps {
   mcqs: MCQ[];
   fillBlanks: FillInBlank[];
+  bankId?: string;
+  bankName?: string;
+  onRegenerateQuestion?: (questionId: string, type: 'mcq' | 'fillBlank') => void;
 }
 
 type QuizItem = (MCQ & { type: 'mcq' }) | (FillInBlank & { type: 'fillBlank' });
@@ -18,7 +23,7 @@ interface AnswerRecord {
   isCorrect: boolean;
 }
 
-export function QuizView({ mcqs, fillBlanks }: QuizViewProps) {
+export function QuizView({ mcqs, fillBlanks, bankId = 'default', bankName = 'Study Bank', onRegenerateQuestion }: QuizViewProps) {
   const [quizStarted, setQuizStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -31,6 +36,24 @@ export function QuizView({ mcqs, fillBlanks }: QuizViewProps) {
   const [showReview, setShowReview] = useState(false);
   const [expandedReview, setExpandedReview] = useState<Set<number>>(new Set());
   const [shuffledQuestions, setShuffledQuestions] = useState<QuizItem[]>([]);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const startTimeRef = useRef<number>(Date.now());
+  
+  // Record session when quiz completes
+  useEffect(() => {
+    if (quizComplete && answerHistory.length > 0) {
+      const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
+      recordStudySession(
+        bankId,
+        bankName,
+        'quiz',
+        answerHistory.length,
+        score,
+        answerHistory.length,
+        timeSpent
+      );
+    }
+  }, [quizComplete, score, answerHistory.length, bankId, bankName]);
   
   // Combine questions - shuffle happens on quiz start
   const combinedQuestions = useMemo(() => {
@@ -82,7 +105,35 @@ export function QuizView({ mcqs, fillBlanks }: QuizViewProps) {
     setAnsweredQuestions(new Array(shuffled.length).fill(false));
     setAnswerHistory([]);
     setShowReview(false);
+    startTimeRef.current = Date.now();
   };
+  
+  const handleToggleFavorite = () => {
+    const q = currentQuestion;
+    const questionText = q.type === 'mcq' ? q.question : q.sentence;
+    const answerText = q.type === 'mcq' ? q.options[q.correctIndex] : q.answer;
+    
+    const result = toggleFavorite({
+      bankId,
+      bankName,
+      type: q.type === 'mcq' ? 'mcq' : 'fillblank',
+      question: questionText,
+      answer: answerText,
+      options: q.type === 'mcq' ? q.options : undefined
+    });
+    
+    if (result.isNowFavorite) {
+      setFavorites(prev => new Set([...prev, q.id]));
+    } else {
+      setFavorites(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(q.id);
+        return newSet;
+      });
+    }
+  };
+  
+  const isCurrentFavorite = favorites.has(currentQuestion?.id || '');
   
   const handleSelectAnswer = (answer: number | string) => {
     if (showResult) return;
@@ -373,7 +424,29 @@ export function QuizView({ mcqs, fillBlanks }: QuizViewProps) {
           <span className="text-muted-foreground">
             Question {currentIndex + 1} of {allQuestions.length}
           </span>
-          <span className="font-medium text-success">Score: {score}</span>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={handleToggleFavorite}
+              className={`h-8 w-8 p-0 ${isCurrentFavorite ? 'text-yellow-500' : 'text-muted-foreground'}`}
+              title="Star this question"
+            >
+              <Star className={`h-4 w-4 ${isCurrentFavorite ? 'fill-yellow-500' : ''}`} />
+            </Button>
+            {onRegenerateQuestion && showResult && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => onRegenerateQuestion(currentQuestion.id, currentQuestion.type === 'mcq' ? 'mcq' : 'fillBlank')}
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
+                title="Regenerate this question"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            )}
+            <span className="font-medium text-success">Score: {score}</span>
+          </div>
         </div>
         <Progress value={((currentIndex + 1) / allQuestions.length) * 100} />
       </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Brain, FileQuestion, GraduationCap, Sparkles } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger, TabsContent, Card, Progress } from '@/components/ui';
+import { BookOpen, Brain, FileQuestion, GraduationCap, Sparkles, Download, TrendingUp } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent, Card, Progress, Button } from '@/components/ui';
 import { FileUpload } from './FileUpload';
 import { FlashcardView } from './FlashcardView';
 import { QuizView } from './QuizView';
@@ -9,15 +9,25 @@ import { ExamView } from './ExamView';
 import { StudyBankList } from './StudyBankList';
 import { CustomInstructions } from './CustomInstructions';
 import { AIProviderStatus } from './AIProviderStatus';
+import { ProgressDashboard } from './ProgressDashboard';
 import { useStudy } from '@/context/StudyContext';
+import { exportToPDF } from '@/utils/exportPDF';
 import type { StudyBank } from '@/types';
 
 export function Dashboard() {
   const { activeBank, dispatch, processingStatus } = useStudy();
   const [activeTab, setActiveTab] = useState('flashcards');
+  const [showProgress, setShowProgress] = useState(false);
   
   const handleSelectBank = (bank: StudyBank) => {
     dispatch({ type: 'SET_ACTIVE_BANK', payload: bank });
+    setShowProgress(false);
+  };
+  
+  const handleExportPDF = () => {
+    if (activeBank) {
+      exportToPDF(activeBank, { showAnswers: true });
+    }
   };
   
   const totalItems = activeBank 
@@ -39,7 +49,28 @@ export function Dashboard() {
                 <p className="text-xs text-muted-foreground">AI-Powered Study Materials</p>
               </div>
             </div>
-            <AIProviderStatus />
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowProgress(!showProgress)}
+                className={showProgress ? 'text-primary' : ''}
+              >
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Progress
+              </Button>
+              {activeBank && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportPDF}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export PDF
+                </Button>
+              )}
+              <AIProviderStatus />
+            </div>
           </div>
         </div>
       </header>
@@ -83,7 +114,9 @@ export function Dashboard() {
           
           {/* Content Area */}
           <div className="space-y-6">
-            {activeBank ? (
+            {showProgress ? (
+              <ProgressDashboard />
+            ) : activeBank ? (
               <>
                 {/* Bank Header */}
                 <Card className="p-6">
@@ -167,11 +200,20 @@ export function Dashboard() {
                   </TabsList>
                   
                   <TabsContent value="flashcards">
-                    <FlashcardView flashcards={activeBank.flashcards} />
+                    <FlashcardView 
+                      flashcards={activeBank.flashcards} 
+                      bankId={activeBank.id}
+                      bankName={activeBank.fileName}
+                    />
                   </TabsContent>
                   
                   <TabsContent value="quiz">
-                    <QuizView mcqs={activeBank.mcqs} fillBlanks={activeBank.fillBlanks} />
+                    <QuizView 
+                      mcqs={activeBank.mcqs} 
+                      fillBlanks={activeBank.fillBlanks}
+                      bankId={activeBank.id}
+                      bankName={activeBank.fileName}
+                    />
                   </TabsContent>
                   
                   <TabsContent value="exam">

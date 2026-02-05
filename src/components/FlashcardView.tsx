@@ -1,20 +1,56 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RotateCcw, ChevronLeft, ChevronRight, Shuffle, BookOpen } from 'lucide-react';
+import { RotateCcw, ChevronLeft, ChevronRight, Shuffle, BookOpen, Star, Clock } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
 import type { Flashcard } from '@/types';
+import { isFavorite, toggleFavorite } from '@/utils/favorites';
+import { recordStudySession } from '@/utils/progress';
 
 interface FlashcardViewProps {
   flashcards: Flashcard[];
+  bankId?: string;
+  bankName?: string;
 }
 
-export function FlashcardView({ flashcards }: FlashcardViewProps) {
+export function FlashcardView({ flashcards, bankId = 'default', bankName = 'Study Bank' }: FlashcardViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [shuffledCards, setShuffledCards] = useState<Flashcard[]>([]);
+  const [viewedCards, setViewedCards] = useState<Set<number>>(new Set([0]));
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const startTimeRef = useRef<number>(Date.now());
   
   // Use flashcards directly or shuffled version
   const cards = shuffledCards.length > 0 ? shuffledCards : flashcards;
+  
+  // Load favorites on mount
+  useEffect(() => {
+    const favSet = new Set<string>();
+    flashcards.forEach(card => {
+      if (isFavorite(card.question, bankId)) {
+        favSet.add(card.id);
+      }
+    });
+    setFavorites(favSet);
+  }, [flashcards, bankId]);
+  
+  // Record study session on unmount
+  useEffect(() => {
+    return () => {
+      if (viewedCards.size > 1) {
+        const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
+        recordStudySession(
+          bankId,
+          bankName,
+          'flashcards',
+          viewedCards.size,
+          viewedCards.size, // All viewed cards count as "correct" for flashcards
+          flashcards.length,
+          timeSpent
+        );
+      }
+    };
+  }, [viewedCards.size, bankId, bankName, flashcards.length]);
   
   if (flashcards.length === 0) {
     return (
@@ -42,14 +78,22 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
   const handleNext = () => {
     setIsFlipped(false);
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % cards.length);
+      setCurrentIndex((prev) => {
+        const newIndex = (prev + 1) % cards.length;
+        setViewedCards(v => new Set([...v, newIndex]));
+        return newIndex;
+      });
     }, 150);
   };
   
   const handlePrev = () => {
     setIsFlipped(false);
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev - 1 + cards.length) % cards.length);
+      setCurrentIndex((prev) => {
+        const newIndex = (prev - 1 + cards.length) % cards.length;
+        setViewedCards(v => new Set([...v, newIndex]));
+        return newIndex;
+      });
     }, 150);
   };
   
@@ -58,22 +102,62 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
     setShuffledCards(shuffled);
     setCurrentIndex(0);
     setIsFlipped(false);
+    setViewedCards(new Set([0]));
   };
   
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
   };
   
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const result = toggleFavorite({
+      bankId,
+      bankName,
+      type: 'flashcard',
+      question: currentCard.question,
+      answer: currentCard.answer
+    });
+    
+    if (result.isNowFavorite) {
+      setFavorites(prev => new Set([...prev, currentCard.id]));
+    } else {
+      setFavorites(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(currentCard.id);
+        return newSet;
+      });
+    }
+  };
+  
+  const isCurrentFavorite = favorites.has(currentCard.id);
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          Card {currentIndex + 1} of {cards.length}
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-muted-foreground">
+            Card {currentIndex + 1} of {cards.length}
+          </div>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            {viewedCards.size} studied
+          </div>
         </div>
-        <Button variant="outline" size="sm" onClick={handleShuffle}>
-          <Shuffle className="h-4 w-4 mr-2" />
-          Shuffle
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleToggleFavorite}
+            className={isCurrentFavorite ? 'text-yellow-500 border-yellow-500' : ''}
+          >
+            <Star className={`h-4 w-4 ${isCurrentFavorite ? 'fill-yellow-500' : ''}`} />
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleShuffle}>
+            <Shuffle className="h-4 w-4 mr-2" />
+            Shuffle
+          </Button>
+        </div>
       </div>
       
       <div className="perspective-1000">
