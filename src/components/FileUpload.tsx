@@ -171,17 +171,20 @@ export function FileUpload() {
   const isProcessing = isExtracting || processingStatus.isProcessing;
   
   return (
-    <Card className="relative overflow-hidden">
+    <Card className="relative overflow-hidden card-glow">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
       
       <div className="relative p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-lg bg-primary/10">
+          <motion.div 
+            className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20"
+            whileHover={{ scale: 1.1, rotate: 5 }}
+          >
             <Upload className="h-5 w-5 text-primary" />
-          </div>
+          </motion.div>
           <div>
-            <h2 className="text-lg font-semibold">Upload Study Material</h2>
+            <h2 className="text-lg font-semibold gradient-text">Upload Study Material</h2>
             <p className="text-sm text-muted-foreground">PDF, images, or text files supported</p>
           </div>
         </div>
@@ -198,10 +201,10 @@ export function FileUpload() {
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 className={`
-                  relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer
+                  upload-zone relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer
                   ${isDragging 
-                    ? 'border-primary bg-primary/5 scale-[1.02]' 
-                    : 'border-border hover:border-primary/50 hover:bg-secondary/30'
+                    ? 'drag-over border-primary bg-primary/10 scale-[1.02]' 
+                    : 'border-primary/30 hover:border-primary/60 hover:bg-secondary/30'
                   }
                 `}
               >
@@ -213,18 +216,22 @@ export function FileUpload() {
                 />
                 
                 <motion.div
-                  animate={{ y: isDragging ? -5 : 0 }}
+                  animate={{ y: isDragging ? -8 : 0, scale: isDragging ? 1.05 : 1 }}
+                  transition={{ type: "spring", stiffness: 300 }}
                   className="flex flex-col items-center gap-4"
                 >
-                  <div className="p-4 rounded-full bg-secondary">
-                    <FileText className="h-8 w-8 text-muted-foreground" />
-                  </div>
+                  <motion.div 
+                    className="p-4 rounded-full bg-gradient-to-br from-primary/20 to-accent/20"
+                    animate={{ rotate: isDragging ? 10 : 0 }}
+                  >
+                    <FileText className="h-8 w-8 text-primary" />
+                  </motion.div>
                   <div>
-                    <p className="font-medium">
-                      {isDragging ? 'Drop your file here' : 'Drag & drop your file here'}
+                    <p className="font-medium text-lg">
+                      {isDragging ? '✨ Drop your file here' : 'Drag & drop your file here'}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      or click to browse
+                      or <span className="text-primary font-medium">click to browse</span>
                     </p>
                   </div>
                 </motion.div>
