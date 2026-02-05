@@ -6,26 +6,19 @@ import { getProgress, getRecentSessions, getTodayStats, formatTime, type UserPro
 import { getFavorites, type StarredItem } from '@/utils/favorites';
 
 export function ProgressDashboard() {
-  const [progress, setProgress] = useState<UserProgress | null>(null);
-  const [recentSessions, setRecentSessions] = useState<StudySession[]>([]);
-  const [todayStats, setTodayStats] = useState({ cardsStudied: 0, quizzesTaken: 0, correctRate: 0 });
-  const [favorites, setFavorites] = useState<StarredItem[]>([]);
+  const [progress, setProgress] = useState<UserProgress>(() => getProgress());
+  const [recentSessions, setRecentSessions] = useState<StudySession[]>(() => getRecentSessions(20));
+  const [todayStats, setTodayStats] = useState(() => getTodayStats());
+  const [favorites, setFavorites] = useState<StarredItem[]>(() => getFavorites());
   const [activeTab, setActiveTab] = useState<'stats' | 'history' | 'favorites'>('stats');
   
+  // Refresh data when component mounts
   useEffect(() => {
     setProgress(getProgress());
     setRecentSessions(getRecentSessions(20));
     setTodayStats(getTodayStats());
     setFavorites(getFavorites());
   }, []);
-  
-  if (!progress) {
-    return (
-      <Card className="p-8 text-center">
-        <div className="animate-pulse">Loading progress...</div>
-      </Card>
-    );
-  }
   
   const tabs = [
     { id: 'stats', label: 'Statistics', icon: TrendingUp },
