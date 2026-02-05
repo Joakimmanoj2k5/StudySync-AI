@@ -155,27 +155,48 @@ export function getCustomInstructions(): string {
 
 function getStudyMaterialsPrompt(text: string): string {
   const userInstructions = getCustomInstructions();
-  const additionalContext = userInstructions ? `\nUSER NOTES: ${userInstructions}` : '';
+  const additionalContext = userInstructions ? `\n\nADDITIONAL USER INSTRUCTIONS: ${userInstructions}` : '';
   
-  return `You are an expert educator. Generate study materials for this topic.${additionalContext}
+  return `You are an expert educator and exam question writer. Your task is to create HIGH-QUALITY, EXAM-WORTHY study materials.${additionalContext}
 
-TOPIC: ${text}
+CONTENT TO STUDY:
+"""
+${text}
+"""
 
-Rules:
-- If just a topic name, use your knowledge
-- Create exam-quality questions
-- Be concise but educational
+CRITICAL RULES FOR QUALITY:
+1. Questions must be SPECIFIC and test real understanding, not trivial facts
+2. MCQ options must be plausible - avoid obviously wrong answers
+3. Flashcard answers should be comprehensive (2-4 sentences) with key concepts
+4. Fill-in-the-blanks should test important terms/concepts, not random words
+5. Short answer questions should require critical thinking and analysis
+6. All content must be ACCURATE and based on the provided text
+7. Questions should cover different difficulty levels (easy, medium, hard)
+8. Avoid yes/no questions - ask "how", "why", "explain", "compare"
 
-Return ONLY this JSON format:
+RETURN ONLY THIS JSON FORMAT (no markdown, no extra text):
 {
-  "flashcards": [{"question": "Q", "answer": "A (2-3 sentences)"}],
-  "mcqs": [{"question": "Q", "options": ["A","B","C","D"], "correctIndex": 0, "explanation": "Why A is correct"}],
-  "fillBlanks": [{"sentence": "Text with _____", "answer": "word", "explanation": "Brief context"}],
-  "shortAnswers": [{"question": "Q requiring analysis", "suggestedAnswer": "Model answer"}]
+  "flashcards": [
+    {"question": "Clear, specific question about a key concept", "answer": "Comprehensive answer explaining the concept in 2-4 sentences with examples if relevant"}
+  ],
+  "mcqs": [
+    {"question": "Question testing understanding (not just memory)", "options": ["Correct answer", "Plausible wrong answer 1", "Plausible wrong answer 2", "Plausible wrong answer 3"], "correctIndex": 0, "explanation": "Detailed explanation of why the correct answer is right and others are wrong"}
+  ],
+  "fillBlanks": [
+    {"sentence": "A complete sentence with _____ for an important term", "answer": "key term", "explanation": "Why this term is important and its context"}
+  ],
+  "shortAnswers": [
+    {"question": "Open-ended question requiring analysis, comparison, or explanation", "suggestedAnswer": "Detailed model answer covering all key points (3-5 sentences)"}
+  ]
 }
 
-GENERATE: 12 flashcards, 6 MCQs, 6 fill-blanks, 4 short answers.
-OUTPUT: Valid JSON only, no markdown.`;
+GENERATE EXACTLY:
+- 12 high-quality flashcards covering main concepts
+- 6 challenging MCQs with 4 plausible options each
+- 6 fill-in-the-blanks for key terminology
+- 4 short answer questions requiring deeper thinking
+
+OUTPUT: Valid JSON only. No markdown code blocks. No extra text.`;
 }
 
 // ============================================================================
