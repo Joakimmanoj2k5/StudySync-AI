@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, type ReactNode } from 'react';
+import React, { createContext, useReducer, useEffect, useCallback, type ReactNode } from 'react';
 import type { StudyBank, ProcessingStatus, Flashcard, MCQ, FillInBlank, ShortAnswer, ChunkResult } from '../types';
 import { 
   loadStudyBanks, 
@@ -187,7 +187,8 @@ interface StudyContextType extends StudyState {
   deleteBank: (bankId: string) => Promise<void>;
 }
 
-const StudyContext = createContext<StudyContextType | undefined>(undefined);
+// eslint-disable-next-line react-refresh/only-export-components
+export const StudyContext = createContext<StudyContextType | undefined>(undefined);
 
 export function StudyProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(studyReducer, initialState);
@@ -302,12 +303,4 @@ export function StudyProvider({ children }: { children: ReactNode }) {
       {children}
     </StudyContext.Provider>
   );
-}
-
-export function useStudy() {
-  const context = useContext(StudyContext);
-  if (!context) {
-    throw new Error('useStudy must be used within a StudyProvider');
-  }
-  return context;
 }

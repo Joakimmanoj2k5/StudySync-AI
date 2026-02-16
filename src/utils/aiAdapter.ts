@@ -16,10 +16,14 @@ const API_CONFIG = {
   groq: import.meta.env.VITE_GROQ_API_KEY || ''
 };
 
-// Debug: Log API key status (not the actual keys)
-console.log('[AIAdapter] Environment:', IS_PRODUCTION ? 'PRODUCTION' : 'DEVELOPMENT');
-console.log('[AIAdapter] Gemini key loaded:', API_CONFIG.gemini ? 'YES (' + API_CONFIG.gemini.substring(0, 8) + '...)' : 'NO');
-console.log('[AIAdapter] Groq key loaded:', API_CONFIG.groq ? 'YES (' + API_CONFIG.groq.substring(0, 8) + '...)' : 'NO');
+const DEBUG_AI = import.meta.env.DEV;
+const debugLog = (...args: unknown[]) => {
+  if (DEBUG_AI) console.log(...args);
+};
+
+debugLog('[AIAdapter] Environment:', IS_PRODUCTION ? 'PRODUCTION' : 'DEVELOPMENT');
+debugLog('[AIAdapter] Gemini key loaded:', API_CONFIG.gemini ? 'YES' : 'NO');
+debugLog('[AIAdapter] Groq key loaded:', API_CONFIG.groq ? 'YES' : 'NO');
 
 // Provider types
 export type AIProvider = 'ollama' | 'gemini' | 'groq';
@@ -164,29 +168,31 @@ CONTENT TO STUDY:
 ${text}
 """
 
-CRITICAL RULES FOR QUALITY:
-1. Questions must be SPECIFIC and test real understanding, not trivial facts
-2. MCQ options must be plausible - avoid obviously wrong answers
-3. Flashcard answers should be comprehensive (2-4 sentences) with key concepts
-4. Fill-in-the-blanks should test important terms/concepts, not random words
-5. Short answer questions should require critical thinking and analysis
-6. All content must be ACCURATE and based on the provided text
-7. Questions should cover different difficulty levels (easy, medium, hard)
-8. Avoid yes/no questions - ask "how", "why", "explain", "compare"
+QUALITY RULES (MANDATORY):
+1. Use exact terminology from the source text whenever possible.
+2. No generic prompts like "What is X?" unless X is a precise technical term from the text.
+3. Every question must include enough context to stand alone.
+4. Prefer "how/why/compare/analyze" style questions over definition-only questions.
+5. MCQ distractors must be plausible and domain-relevant, not random words.
+6. Flashcard answers must be specific and include 1 concrete detail from the source text.
+7. Fill-in-the-blank must hide a key concept/term, not a filler word.
+8. If the source has formulas, steps, timelines, or named entities, include them.
+9. Do not invent facts not present in the source text.
+10. Keep language clear and exam-focused.
 
 RETURN ONLY THIS JSON FORMAT (no markdown, no extra text):
 {
   "flashcards": [
-    {"question": "Clear, specific question about a key concept", "answer": "Comprehensive answer explaining the concept in 2-4 sentences with examples if relevant"}
+    {"question": "Specific question about a key concept from the source", "answer": "Comprehensive answer (2-4 sentences) with concrete details"}
   ],
   "mcqs": [
-    {"question": "Question testing understanding (not just memory)", "options": ["Correct answer", "Plausible wrong answer 1", "Plausible wrong answer 2", "Plausible wrong answer 3"], "correctIndex": 0, "explanation": "Detailed explanation of why the correct answer is right and others are wrong"}
+    {"question": "Question testing understanding from the source text", "options": ["Correct answer", "Plausible distractor 1", "Plausible distractor 2", "Plausible distractor 3"], "correctIndex": 0, "explanation": "Why the correct option is right based on the source"}
   ],
   "fillBlanks": [
-    {"sentence": "A complete sentence with _____ for an important term", "answer": "key term", "explanation": "Why this term is important and its context"}
+    {"sentence": "A complete sentence from the source with _____ for a key term", "answer": "key term", "explanation": "Why this term matters in context"}
   ],
   "shortAnswers": [
-    {"question": "Open-ended question requiring analysis, comparison, or explanation", "suggestedAnswer": "Detailed model answer covering all key points (3-5 sentences)"}
+    {"question": "Open-ended analytical question grounded in the source", "suggestedAnswer": "Detailed model answer (3-5 sentences) with key points"}
   ]
 }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Flame, Clock, Target, TrendingUp, BookOpen, Calendar, Star } from 'lucide-react';
 import { Card } from '@/components/ui';
@@ -11,14 +11,6 @@ export function ProgressDashboard() {
   const [todayStats, setTodayStats] = useState(() => getTodayStats());
   const [favorites, setFavorites] = useState<StarredItem[]>(() => getFavorites());
   const [activeTab, setActiveTab] = useState<'stats' | 'history' | 'favorites'>('stats');
-  
-  // Refresh data when component mounts
-  useEffect(() => {
-    setProgress(getProgress());
-    setRecentSessions(getRecentSessions(20));
-    setTodayStats(getTodayStats());
-    setFavorites(getFavorites());
-  }, []);
   
   const tabs = [
     { id: 'stats', label: 'Statistics', icon: TrendingUp },

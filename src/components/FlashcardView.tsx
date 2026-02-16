@@ -18,13 +18,15 @@ export function FlashcardView({ flashcards, bankId = 'default', bankName = 'Stud
   const [shuffledCards, setShuffledCards] = useState<Flashcard[]>([]);
   const [viewedCards, setViewedCards] = useState<Set<number>>(new Set([0]));
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number>(0);
   
   // Use flashcards directly or shuffled version
   const cards = shuffledCards.length > 0 ? shuffledCards : flashcards;
   
   // Load favorites on mount
   useEffect(() => {
+    startTimeRef.current = Date.now();
+
     const favSet = new Set<string>();
     flashcards.forEach(card => {
       if (isFavorite(card.question, bankId)) {
@@ -36,9 +38,10 @@ export function FlashcardView({ flashcards, bankId = 'default', bankName = 'Stud
   
   // Record study session on unmount
   useEffect(() => {
+    const startedAt = startTimeRef.current;
     return () => {
       if (viewedCards.size > 1) {
-        const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
+        const timeSpent = Math.round((Date.now() - startedAt) / 1000);
         recordStudySession(
           bankId,
           bankName,

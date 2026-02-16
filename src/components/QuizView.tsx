@@ -37,7 +37,7 @@ export function QuizView({ mcqs, fillBlanks, bankId = 'default', bankName = 'Stu
   const [expandedReview, setExpandedReview] = useState<Set<number>>(new Set());
   const [shuffledQuestions, setShuffledQuestions] = useState<QuizItem[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number>(0);
   
   // Record session when quiz completes
   useEffect(() => {

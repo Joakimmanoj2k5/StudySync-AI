@@ -11,6 +11,15 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'pdf-tools': ['pdfjs-dist', 'tesseract.js'],
+        },
+      },
+    },
+  },
   optimizeDeps: {
     include: ['pdfjs-dist'],
   },

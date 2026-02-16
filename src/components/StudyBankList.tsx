@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Trash2, Calendar, FileText, BookOpen, HelpCircle, PenLine, ListChecks, Database, AlertCircle } from 'lucide-react';
 import { Button, Card, Progress } from '@/components/ui';
-import { useStudy } from '@/context/StudyContext';
+import { useStudy } from '@/context/useStudy';
 import type { StudyBank } from '@/types';
 
 interface StudyBankListProps {

@@ -10,7 +10,7 @@ import { StudyBankList } from './StudyBankList';
 import { CustomInstructions } from './CustomInstructions';
 import { AIProviderStatus } from './AIProviderStatus';
 import { ProgressDashboard } from './ProgressDashboard';
-import { useStudy } from '@/context/StudyContext';
+import { useStudy } from '@/context/useStudy';
 import { exportToPDF } from '@/utils/exportPDF';
 import type { StudyBank } from '@/types';
 

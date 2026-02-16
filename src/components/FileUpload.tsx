@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileText, X, Loader2, Sparkles } from 'lucide-react';
 import { Button, Card, Progress } from '@/components/ui';
-import { useStudy } from '@/context/StudyContext';
+import { useStudy } from '@/context/useStudy';
 import { extractText, type ExtractionProgress } from '@/utils/pdfExtractor';
 import { chunkText, getChunkingStats } from '@/utils/chunking';
 import { processChunk } from '@/utils/aiProcessor';
