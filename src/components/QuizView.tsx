@@ -137,6 +137,31 @@ export function QuizView({ mcqs, fillBlanks, bankId = 'default', bankName = 'Stu
   
   const handleSelectAnswer = (answer: number | string) => {
     if (showResult) return;
+
+    // MCQs are auto-submitted on option click.
+    if (currentQuestion.type === 'mcq') {
+      const selectedIndex = answer as number;
+      const isCorrect = selectedIndex === currentQuestion.correctIndex;
+
+      setSelectedAnswer(selectedIndex);
+      if (isCorrect) {
+        setScore(prev => prev + 1);
+      }
+
+      const newAnswered = [...answeredQuestions];
+      newAnswered[currentIndex] = isCorrect;
+      setAnsweredQuestions(newAnswered);
+
+      setAnswerHistory(prev => [...prev, {
+        question: currentQuestion,
+        userAnswer: selectedIndex,
+        isCorrect,
+      }]);
+
+      setShowResult(true);
+      return;
+    }
+
     setSelectedAnswer(answer);
   };
   
@@ -562,12 +587,18 @@ export function QuizView({ mcqs, fillBlanks, bankId = 'default', bankName = 'Stu
       {/* Actions */}
       <div className="flex justify-end gap-3">
         {!showResult ? (
-          <Button 
-            onClick={handleSubmitAnswer}
-            disabled={selectedAnswer === null && fillBlankInput === ''}
-          >
-            Submit Answer
-          </Button>
+          currentQuestion.type === 'fillBlank' ? (
+            <Button 
+              onClick={handleSubmitAnswer}
+              disabled={fillBlankInput === ''}
+            >
+              Submit Answer
+            </Button>
+          ) : (
+            <p className="text-sm text-muted-foreground self-center">
+              Select an option to answer
+            </p>
+          )
         ) : (
           <Button onClick={handleNext}>
             {currentIndex + 1 >= allQuestions.length ? 'See Results' : 'Next Question'}

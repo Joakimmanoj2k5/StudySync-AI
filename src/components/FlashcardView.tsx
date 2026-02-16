@@ -17,24 +17,16 @@ export function FlashcardView({ flashcards, bankId = 'default', bankName = 'Stud
   const [isFlipped, setIsFlipped] = useState(false);
   const [shuffledCards, setShuffledCards] = useState<Flashcard[]>([]);
   const [viewedCards, setViewedCards] = useState<Set<number>>(new Set([0]));
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [, setFavoriteVersion] = useState(0);
   const startTimeRef = useRef<number>(0);
   
   // Use flashcards directly or shuffled version
   const cards = shuffledCards.length > 0 ? shuffledCards : flashcards;
   
-  // Load favorites on mount
+  // Track session start time
   useEffect(() => {
     startTimeRef.current = Date.now();
-
-    const favSet = new Set<string>();
-    flashcards.forEach(card => {
-      if (isFavorite(card.question, bankId)) {
-        favSet.add(card.id);
-      }
-    });
-    setFavorites(favSet);
-  }, [flashcards, bankId]);
+  }, []);
   
   // Record study session on unmount
   useEffect(() => {
@@ -122,18 +114,12 @@ export function FlashcardView({ flashcards, bankId = 'default', bankName = 'Stud
       answer: currentCard.answer
     });
     
-    if (result.isNowFavorite) {
-      setFavorites(prev => new Set([...prev, currentCard.id]));
-    } else {
-      setFavorites(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(currentCard.id);
-        return newSet;
-      });
+    if (result) {
+      setFavoriteVersion((value) => value + 1);
     }
   };
   
-  const isCurrentFavorite = favorites.has(currentCard.id);
+  const isCurrentFavorite = isFavorite(currentCard.question, bankId);
   
   return (
     <div className="space-y-6">

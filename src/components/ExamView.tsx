@@ -111,6 +111,7 @@ export function ExamView({ questions }: ExamViewProps) {
         {questions.map((question, index) => {
           const answer = answers[question.id] || { userAnswer: '', showSuggested: false, isSubmitted: false };
           const isExpanded = expandedQuestions.has(question.id);
+          const suggestedAnswerText = question.suggestedAnswer?.trim() || 'Suggested answer is not available for this question yet.';
           
           return (
             <motion.div
@@ -212,7 +213,7 @@ export function ExamView({ questions }: ExamViewProps) {
                               className="p-4 rounded-lg bg-success/10 border border-success/20"
                             >
                               <p className="text-sm text-success mb-1 font-medium">Suggested Answer:</p>
-                              <p className="text-sm">{question.suggestedAnswer}</p>
+                              <p className="text-sm">{suggestedAnswerText}</p>
                             </motion.div>
                           )}
                         </AnimatePresence>

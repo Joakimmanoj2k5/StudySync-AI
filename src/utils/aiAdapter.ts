@@ -568,9 +568,9 @@ function parseAIResponse(response: string): GeneratedContent {
       if (Array.isArray(parsed.shortAnswers)) {
         result.shortAnswers = parsed.shortAnswers
           .filter((s: { question?: string }) => s.question)
-          .map((s: { question: string; suggestedAnswer?: string }) => ({
+          .map((s: { question: string; suggestedAnswer?: string; answer?: string; modelAnswer?: string }) => ({
             question: s.question,
-            suggestedAnswer: s.suggestedAnswer || ''
+            suggestedAnswer: s.suggestedAnswer || s.answer || s.modelAnswer || ''
           }));
       }
       

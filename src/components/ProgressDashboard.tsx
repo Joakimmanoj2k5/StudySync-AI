@@ -6,10 +6,10 @@ import { getProgress, getRecentSessions, getTodayStats, formatTime, type UserPro
 import { getFavorites, type StarredItem } from '@/utils/favorites';
 
 export function ProgressDashboard() {
-  const [progress, setProgress] = useState<UserProgress>(() => getProgress());
-  const [recentSessions, setRecentSessions] = useState<StudySession[]>(() => getRecentSessions(20));
-  const [todayStats, setTodayStats] = useState(() => getTodayStats());
-  const [favorites, setFavorites] = useState<StarredItem[]>(() => getFavorites());
+  const progress: UserProgress = getProgress();
+  const recentSessions: StudySession[] = getRecentSessions(20);
+  const todayStats = getTodayStats();
+  const favorites: StarredItem[] = getFavorites();
   const [activeTab, setActiveTab] = useState<'stats' | 'history' | 'favorites'>('stats');
   
   const tabs = [
