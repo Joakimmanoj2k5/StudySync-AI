@@ -15,6 +15,12 @@ interface AnswerState {
   isSubmitted: boolean;
 }
 
+const EMPTY_ANSWER_STATE: AnswerState = {
+  userAnswer: '',
+  showSuggested: false,
+  isSubmitted: false,
+};
+
 export function ExamView({ questions }: ExamViewProps) {
   const [answers, setAnswers] = useState<Record<string, AnswerState>>({});
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
@@ -45,10 +51,11 @@ export function ExamView({ questions }: ExamViewProps) {
   };
   
   const updateAnswer = (id: string, userAnswer: string) => {
+    const previous = answers[id] ?? EMPTY_ANSWER_STATE;
     setAnswers(prev => ({
       ...prev,
       [id]: {
-        ...prev[id],
+        ...previous,
         userAnswer,
         showSuggested: false,
         isSubmitted: false,
@@ -57,21 +64,23 @@ export function ExamView({ questions }: ExamViewProps) {
   };
   
   const submitAnswer = (id: string) => {
+    const previous = answers[id] ?? EMPTY_ANSWER_STATE;
     setAnswers(prev => ({
       ...prev,
       [id]: {
-        ...prev[id],
+        ...previous,
         isSubmitted: true,
       },
     }));
   };
   
   const toggleSuggestedAnswer = (id: string) => {
+    const previous = answers[id] ?? EMPTY_ANSWER_STATE;
     setAnswers(prev => ({
       ...prev,
       [id]: {
-        ...prev[id],
-        showSuggested: !prev[id]?.showSuggested,
+        ...previous,
+        showSuggested: !previous.showSuggested,
       },
     }));
   };
@@ -109,7 +118,7 @@ export function ExamView({ questions }: ExamViewProps) {
       {/* Questions List */}
       <div className="space-y-4">
         {questions.map((question, index) => {
-          const answer = answers[question.id] || { userAnswer: '', showSuggested: false, isSubmitted: false };
+          const answer = answers[question.id] ?? EMPTY_ANSWER_STATE;
           const isExpanded = expandedQuestions.has(question.id);
           const suggestedAnswerText = question.suggestedAnswer?.trim() || 'Suggested answer is not available for this question yet.';
           
@@ -174,24 +183,27 @@ export function ExamView({ questions }: ExamViewProps) {
                         
                         {/* Actions */}
                         <div className="flex items-center justify-between">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => toggleSuggestedAnswer(question.id)}
-                            disabled={examMode && !answer.isSubmitted}
-                          >
-                            {answer.showSuggested ? (
-                              <>
-                                <EyeOff className="h-4 w-4 mr-2" />
-                                Hide Answer
-                              </>
-                            ) : (
-                              <>
-                                <Eye className="h-4 w-4 mr-2" />
-                                {examMode ? 'Show Answer' : 'Suggested Answer'}
-                              </>
+                          <div>
+                            {answer.isSubmitted && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => toggleSuggestedAnswer(question.id)}
+                              >
+                                {answer.showSuggested ? (
+                                  <>
+                                    <EyeOff className="h-4 w-4 mr-2" />
+                                    Hide Answer
+                                  </>
+                                ) : (
+                                  <>
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    {examMode ? 'Show Answer' : 'Suggested Answer'}
+                                  </>
+                                )}
+                              </Button>
                             )}
-                          </Button>
+                          </div>
                           
                           <Button
                             size="sm"
