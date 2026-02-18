@@ -21,7 +21,7 @@ export function ProgressDashboard() {
   return (
     <div className="space-y-6">
       {/* Header Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -45,10 +45,10 @@ export function ProgressDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <Card className="p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20">
+          <Card className="p-4 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-500/20">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/20">
-                <BookOpen className="h-5 w-5 text-blue-500" />
+              <div className="p-2 rounded-lg bg-emerald-500/20">
+                <BookOpen className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{progress.totalCardsStudied}</p>
@@ -81,10 +81,10 @@ export function ProgressDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
+          <Card className="p-4 bg-gradient-to-br from-lime-500/10 to-green-500/10 border-lime-500/20">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-purple-500/20">
-                <Clock className="h-5 w-5 text-purple-500" />
+              <div className="p-2 rounded-lg bg-lime-500/20">
+                <Clock className="h-5 w-5 text-lime-500" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{formatTime(progress.totalTimeSpent)}</p>
@@ -96,12 +96,12 @@ export function ProgressDashboard() {
       </div>
       
       {/* Today's Progress */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <h3 className="font-semibold mb-4 flex items-center gap-2">
           <Trophy className="h-5 w-5 text-yellow-500" />
           Today's Progress
         </h3>
-        <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-1 gap-3 text-center sm:grid-cols-3 sm:gap-4">
           <div className="p-4 rounded-lg bg-secondary">
             <p className="text-3xl font-bold text-primary">{todayStats.cardsStudied}</p>
             <p className="text-sm text-muted-foreground">Cards</p>
@@ -118,12 +118,12 @@ export function ProgressDashboard() {
       </Card>
       
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-border">
+      <div className="flex gap-2 overflow-x-auto border-b border-border pb-1">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            className={`flex shrink-0 items-center gap-2 border-b-2 px-3 py-2 text-sm font-medium transition-colors -mb-px sm:px-4 ${
               activeTab === tab.id
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -186,16 +186,16 @@ export function ProgressDashboard() {
           ) : (
             recentSessions.map(session => (
               <Card key={session.id} className="p-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${
-                      session.type === 'flashcards' ? 'bg-blue-500/10' : 
-                      session.type === 'quiz' ? 'bg-green-500/10' : 'bg-purple-500/10'
+                      session.type === 'flashcards' ? 'bg-emerald-500/10' : 
+                      session.type === 'quiz' ? 'bg-green-500/10' : 'bg-lime-500/10'
                     }`}>
                       {session.type === 'flashcards' ? (
-                        <BookOpen className={`h-4 w-4 text-blue-500`} />
+                        <BookOpen className={`h-4 w-4 text-emerald-500`} />
                       ) : (
-                        <Target className={`h-4 w-4 ${session.type === 'quiz' ? 'text-green-500' : 'text-purple-500'}`} />
+                        <Target className={`h-4 w-4 ${session.type === 'quiz' ? 'text-green-500' : 'text-lime-500'}`} />
                       )}
                     </div>
                     <div>
@@ -205,7 +205,7 @@ export function ProgressDashboard() {
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <p className="font-semibold text-success">
                       {session.correctAnswers}/{session.totalQuestions}
                     </p>
@@ -236,9 +236,9 @@ export function ProgressDashboard() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className={`px-2 py-0.5 text-xs rounded font-medium ${
-                        item.type === 'flashcard' ? 'bg-blue-500/10 text-blue-500' :
+                        item.type === 'flashcard' ? 'bg-emerald-500/10 text-emerald-500' :
                         item.type === 'mcq' ? 'bg-green-500/10 text-green-500' :
-                        'bg-purple-500/10 text-purple-500'
+                        'bg-lime-500/10 text-lime-500'
                       }`}>
                         {item.type}
                       </span>

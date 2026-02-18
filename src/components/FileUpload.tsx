@@ -7,6 +7,29 @@ import { extractText, type ExtractionProgress } from '@/utils/pdfExtractor';
 import { chunkText, getChunkingStats } from '@/utils/chunking';
 import { processChunk } from '@/utils/aiProcessor';
 
+function isLikelyTimetable(text: string): boolean {
+  const normalized = text.toLowerCase();
+  const timetableSignals = [
+    'exam timetable',
+    'time table',
+    'timetable',
+    'schedule',
+    'slot',
+    'session',
+    'date',
+    'time',
+    'venue',
+    'room',
+  ];
+
+  const matches = timetableSignals.filter((signal) => normalized.includes(signal)).length;
+  const dayMatches = (normalized.match(/\b(mon|tue|wed|thu|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/g) || []).length;
+  const dateMatches = (normalized.match(/\b\d{1,2}[/-]\d{1,2}([/-]\d{2,4})?\b/g) || []).length;
+  const timeMatches = (normalized.match(/\b\d{1,2}:\d{2}\s?(am|pm)?\b/g) || []).length;
+
+  return matches >= 2 && (dayMatches >= 2 || dateMatches >= 3 || timeMatches >= 2);
+}
+
 export function FileUpload() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -85,6 +108,10 @@ export function FileUpload() {
       
       if (!result.text || result.text.trim().length === 0) {
         throw new Error('No text content could be extracted from the file. The file might be empty or image-based.');
+      }
+
+      if (isLikelyTimetable(result.text)) {
+        throw new Error('This file looks like a timetable/schedule. Upload chapter notes or concept-based content to generate meaningful study questions.');
       }
       
       // Step 2: Chunk the text
@@ -175,8 +202,8 @@ export function FileUpload() {
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
       
-      <div className="relative p-6">
-        <div className="flex items-center gap-3 mb-6">
+      <div className="relative p-4 sm:p-6">
+        <div className="mb-5 flex items-center gap-3 sm:mb-6">
           <motion.div 
             className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20"
             whileHover={{ scale: 1.1, rotate: 5 }}
@@ -201,7 +228,7 @@ export function FileUpload() {
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 className={`
-                  upload-zone relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer
+                  upload-zone relative cursor-pointer rounded-xl border-2 border-dashed p-5 text-center transition-all duration-300 sm:p-8
                   ${isDragging 
                     ? 'drag-over border-primary bg-primary/10 scale-[1.02]' 
                     : 'border-primary/30 hover:border-primary/60 hover:bg-secondary/30'
@@ -227,7 +254,7 @@ export function FileUpload() {
                     <FileText className="h-8 w-8 text-primary" />
                   </motion.div>
                   <div>
-                    <p className="font-medium text-lg">
+                    <p className="text-base font-medium sm:text-lg">
                       {isDragging ? '✨ Drop your file here' : 'Drag & drop your file here'}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
@@ -246,11 +273,12 @@ export function FileUpload() {
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4"
             >
-              <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
-                <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-secondary/50 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                   <FileText className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">{selectedFile.name}</p>
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{selectedFile.name}</p>
                     <p className="text-sm text-muted-foreground">
                       {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                     </p>
@@ -259,6 +287,7 @@ export function FileUpload() {
                 <Button variant="ghost" size="icon" onClick={removeFile}>
                   <X className="h-4 w-4" />
                 </Button>
+                </div>
               </div>
               
               <Button onClick={processFile} className="w-full" size="lg">

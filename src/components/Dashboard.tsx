@@ -1,6 +1,16 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Brain, FileQuestion, GraduationCap, Sparkles, Download, TrendingUp, Zap } from 'lucide-react';
+import {
+  BookOpen,
+  Brain,
+  FileQuestion,
+  GraduationCap,
+  Sparkles,
+  Download,
+  TrendingUp,
+  Zap,
+  Layers3,
+} from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent, Card, Progress, Button } from '@/components/ui';
 import { FileUpload } from './FileUpload';
 import { FlashcardView } from './FlashcardView';
@@ -14,310 +24,231 @@ import { useStudy } from '@/context/useStudy';
 import { exportToPDF } from '@/utils/exportPDF';
 import type { StudyBank } from '@/types';
 
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
+const cardVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0 },
 };
 
 export function Dashboard() {
   const { activeBank, dispatch, processingStatus } = useStudy();
   const [activeTab, setActiveTab] = useState('flashcards');
   const [showProgress, setShowProgress] = useState(false);
-  
+
   const handleSelectBank = (bank: StudyBank) => {
     dispatch({ type: 'SET_ACTIVE_BANK', payload: bank });
     setShowProgress(false);
   };
-  
+
   const handleExportPDF = () => {
     if (activeBank) {
       exportToPDF(activeBank, { showAnswers: true });
     }
   };
-  
-  const totalItems = activeBank 
+
+  const totalItems = activeBank
     ? activeBank.flashcards.length + activeBank.mcqs.length + activeBank.fillBlanks.length + activeBank.shortAnswers.length
     : 0;
-  
+
   return (
-    <div className="min-h-screen bg-background bg-animated relative overflow-hidden">
-      {/* Background Orbs */}
+    <div className="min-h-screen bg-background bg-animated template-grid-bg relative overflow-x-hidden">
       <div className="bg-orbs">
         <div className="orb orb-1" />
         <div className="orb orb-2" />
         <div className="orb orb-3" />
       </div>
-      
-      {/* Header */}
-      <header className="sticky top-0 z-50 glass border-b border-border/50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <motion.div 
-              className="flex items-center gap-3"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-accent pulse-glow">
-                <Brain className="h-6 w-6 text-white" />
+
+      <header className="sticky top-0 z-50 glass border-b border-border/60">
+        <div className="mx-auto max-w-7xl px-3 sm:px-6">
+          <div className="flex flex-col gap-3 py-3 lg:flex-row lg:items-center lg:justify-between lg:py-3">
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-gradient-to-br from-primary to-accent p-2.5 pulse-glow">
+                <Brain className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold gradient-text neon-text">LearnAI</h1>
-                <p className="text-xs text-muted-foreground">AI-Powered Study Materials</p>
+                <h1 className="text-xl font-semibold tracking-tight gradient-text neon-text">LearnAI</h1>
+                <p className="text-xs text-muted-foreground">Build smart study packs from your notes</p>
               </div>
-            </motion.div>
-            <motion.div 
-              className="flex items-center gap-3"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <Button
-                variant="ghost"
+                variant={showProgress ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setShowProgress(!showProgress)}
-                className={`btn-shine ${showProgress ? 'text-primary' : ''}`}
+                className="btn-shine w-full sm:w-auto"
               >
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Progress
+                <TrendingUp className="mr-2 h-4 w-4" />
+                <span className="sm:hidden">Stats</span>
+                <span className="hidden sm:inline">Progress</span>
               </Button>
               {activeBank && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportPDF}
-                  className="btn-shine"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export PDF
+                <Button variant="outline" size="sm" onClick={handleExportPDF} className="btn-shine w-full sm:w-auto">
+                  <Download className="mr-2 h-4 w-4" />
+                  <span className="sm:hidden">Export</span>
+                  <span className="hidden sm:inline">Export PDF</span>
                 </Button>
               )}
-              <AIProviderStatus />
-            </motion.div>
+              <div className="col-span-2 sm:col-span-1">
+                <AIProviderStatus />
+              </div>
+            </div>
           </div>
         </div>
       </header>
-      
-      {/* Processing Banner */}
+
       <AnimatePresence>
-      {processingStatus.isProcessing && (
-        <motion.div
-          initial={{ y: -50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -50, opacity: 0 }}
-          className="bg-primary/10 border-b border-primary/20 relative z-40"
-        >
-          <div className="container mx-auto px-4 py-3">
-            <div className="flex items-center gap-4">
-              <Sparkles className="h-5 w-5 text-primary animate-sparkle" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">{processingStatus.message}</p>
-                <Progress 
-                  value={processingStatus.totalChunks > 0 
-                    ? (processingStatus.currentChunk / processingStatus.totalChunks) * 100 
-                    : 0}
-                  className="mt-2 h-2 progress-glow"
-                />
+        {processingStatus.isProcessing && (
+          <motion.div
+            initial={{ y: -24, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -24, opacity: 0 }}
+            className="relative z-40 border-b border-primary/25 bg-primary/10"
+          >
+            <div className="mx-auto max-w-7xl px-3 py-3 sm:px-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Sparkles className="h-4 w-4 text-primary animate-sparkle" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{processingStatus.message}</p>
+                  <Progress
+                    value={processingStatus.totalChunks > 0 ? (processingStatus.currentChunk / processingStatus.totalChunks) * 100 : 0}
+                    className="mt-2 h-2 progress-glow"
+                  />
+                </div>
+                <span className="text-[11px] text-muted-foreground sm:text-sm">
+                  {processingStatus.currentChunk}/{processingStatus.totalChunks}
+                </span>
               </div>
-              <span className="text-sm text-muted-foreground">
-                {processingStatus.currentChunk} / {processingStatus.totalChunks}
-              </span>
             </div>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
       </AnimatePresence>
-      
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 relative z-10">
-        <motion.div 
-          className="grid lg:grid-cols-[350px,1fr] gap-8"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
+
+      <main className="relative z-10 mx-auto max-w-7xl px-3 py-5 sm:px-6 lg:py-8">
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-5 rounded-2xl border border-border/70 bg-card/70 p-4 backdrop-blur-md sm:mb-6 sm:p-6"
         >
-          {/* Sidebar */}
-          <motion.aside className="space-y-6" variants={itemVariants}>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                <Zap className="h-3.5 w-3.5" />
+                Study workspace
+              </p>
+              <h2 className="text-xl font-semibold tracking-tight break-words sm:text-3xl">
+                {activeBank ? activeBank.fileName : 'Upload notes and generate a focused study bank'}
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+                {activeBank
+                  ? `${totalItems} study items generated across flashcards, quiz, and exam mode.`
+                  : 'Drop a chapter PDF or clean notes. Timetable/schedule files are automatically detected and blocked.'}
+              </p>
+            </div>
+            {activeBank && (
+              <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:min-w-[320px] sm:grid-cols-3">
+                <div className="rounded-xl border border-primary/20 bg-primary/10 px-3 py-2 text-center">
+                  <p className="text-xs text-muted-foreground">Flashcards</p>
+                  <p className="text-lg font-semibold text-primary">{activeBank.flashcards.length}</p>
+                </div>
+                <div className="rounded-xl border border-accent/20 bg-accent/10 px-3 py-2 text-center">
+                  <p className="text-xs text-muted-foreground">Quiz</p>
+                  <p className="text-lg font-semibold text-accent">{activeBank.mcqs.length + activeBank.fillBlanks.length}</p>
+                </div>
+                <div className="rounded-xl border border-success/20 bg-success/10 px-3 py-2 text-center">
+                  <p className="text-xs text-muted-foreground">Exam</p>
+                  <p className="text-lg font-semibold text-success">{activeBank.shortAnswers.length}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.section>
+
+        <div className="grid gap-6 lg:grid-cols-[330px,1fr]">
+          <motion.aside variants={cardVariants} initial="hidden" animate="visible" className="space-y-5 lg:sticky lg:top-24 lg:h-fit">
             <FileUpload />
             <CustomInstructions />
             <StudyBankList onSelect={handleSelectBank} />
           </motion.aside>
-          
-          {/* Content Area */}
-          <motion.div className="space-y-6" variants={itemVariants}>
+
+          <motion.section variants={cardVariants} initial="hidden" animate="visible" className="space-y-5">
             {showProgress ? (
               <ProgressDashboard />
             ) : activeBank ? (
               <>
-                {/* Bank Header */}
-                <Card className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h2 className="text-xl font-semibold">{activeBank.fileName}</h2>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {totalItems} study items generated
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {activeBank.isProcessing && (
-                        <span className="flex items-center gap-2 text-sm text-primary">
-                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                          Generating...
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Stats - Clickable to switch tabs */}
-                  <div className="grid grid-cols-4 gap-4 mt-6 stagger-children">
-                    <button 
-                      onClick={() => setActiveTab('flashcards')}
-                      className={`stat-card p-4 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 text-left border border-primary/20 ${activeTab === 'flashcards' ? 'ring-2 ring-primary glow-border' : ''}`}
-                    >
-                      <div className="flex items-center gap-2 text-primary mb-2">
-                        <BookOpen className="h-4 w-4" />
-                        <span className="text-xs font-medium">Flashcards</span>
-                      </div>
-                      <p className="text-2xl font-bold gradient-text">{activeBank.flashcards.length}</p>
-                    </button>
-                    <button 
-                      onClick={() => setActiveTab('quiz')}
-                      className={`stat-card p-4 rounded-lg bg-gradient-to-br from-accent/10 to-accent/5 text-left border border-accent/20 ${activeTab === 'quiz' ? 'ring-2 ring-accent glow-border' : ''}`}
-                    >
-                      <div className="flex items-center gap-2 text-accent mb-2">
-                        <FileQuestion className="h-4 w-4" />
-                        <span className="text-xs font-medium">MCQs</span>
-                      </div>
-                      <p className="text-2xl font-bold text-accent">{activeBank.mcqs.length}</p>
-                    </button>
-                    <button 
-                      onClick={() => setActiveTab('quiz')}
-                      className={`stat-card p-4 rounded-lg bg-gradient-to-br from-success/10 to-success/5 text-left border border-success/20 ${activeTab === 'quiz' ? 'ring-2 ring-success glow-border' : ''}`}
-                    >
-                      <div className="flex items-center gap-2 text-success mb-2">
-                        <Sparkles className="h-4 w-4" />
-                        <span className="text-xs font-medium">Fill Blanks</span>
-                      </div>
-                      <p className="text-2xl font-bold text-success">{activeBank.fillBlanks.length}</p>
-                    </button>
-                    <button 
-                      onClick={() => setActiveTab('exam')}
-                      className={`stat-card p-4 rounded-lg bg-gradient-to-br from-warning/10 to-warning/5 text-left border border-warning/20 ${activeTab === 'exam' ? 'ring-2 ring-warning glow-border' : ''}`}
-                    >
-                      <div className="flex items-center gap-2 text-warning mb-2">
-                        <GraduationCap className="h-4 w-4" />
-                        <span className="text-xs font-medium">Short Answer</span>
-                      </div>
-                      <p className="text-2xl font-bold text-warning">{activeBank.shortAnswers.length}</p>
-                    </button>
-                  </div>
+                <Card className="p-2.5 sm:p-4">
+                  <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList className="grid w-full grid-cols-3 gap-1 bg-secondary/60 p-1">
+                      <TabsTrigger value="flashcards" className="gap-1 px-2 py-2 text-[11px] sm:gap-2 sm:px-4 sm:text-sm">
+                        <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">Flashcards</span>
+                        <span className="sm:hidden">Cards</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="quiz" className="gap-1 px-2 py-2 text-[11px] sm:gap-2 sm:px-4 sm:text-sm">
+                        <FileQuestion className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        Quiz
+                      </TabsTrigger>
+                      <TabsTrigger value="exam" className="gap-1 px-2 py-2 text-[11px] sm:gap-2 sm:px-4 sm:text-sm">
+                        <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        Exam
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="flashcards" className="mt-4">
+                      <FlashcardView flashcards={activeBank.flashcards} bankId={activeBank.id} bankName={activeBank.fileName} />
+                    </TabsContent>
+
+                    <TabsContent value="quiz" className="mt-4">
+                      <QuizView
+                        mcqs={activeBank.mcqs}
+                        fillBlanks={activeBank.fillBlanks}
+                        bankId={activeBank.id}
+                        bankName={activeBank.fileName}
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="exam" className="mt-4">
+                      <ExamView questions={activeBank.shortAnswers} />
+                    </TabsContent>
+                  </Tabs>
                 </Card>
-                
-                {/* Study Tabs */}
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid w-full grid-cols-3 bg-secondary/50">
-                    <TabsTrigger value="flashcards" className="gap-2 data-[state=active]:bg-primary/20">
-                      <BookOpen className="h-4 w-4" />
-                      Flashcards
-                    </TabsTrigger>
-                    <TabsTrigger value="quiz" className="gap-2">
-                      <FileQuestion className="h-4 w-4" />
-                      Quiz Mode
-                    </TabsTrigger>
-                    <TabsTrigger value="exam" className="gap-2">
-                      <GraduationCap className="h-4 w-4" />
-                      Exam Mode
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="flashcards">
-                    <FlashcardView 
-                      flashcards={activeBank.flashcards} 
-                      bankId={activeBank.id}
-                      bankName={activeBank.fileName}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="quiz">
-                    <QuizView 
-                      mcqs={activeBank.mcqs} 
-                      fillBlanks={activeBank.fillBlanks}
-                      bankId={activeBank.id}
-                      bankName={activeBank.fileName}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="exam">
-                    <ExamView questions={activeBank.shortAnswers} />
-                  </TabsContent>
-                </Tabs>
               </>
             ) : (
-              <Card className="p-12 text-center card-glow hover-lift">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <motion.div 
-                    className="p-6 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 w-fit mx-auto mb-6 pulse-glow"
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Zap className="h-12 w-12 text-primary" />
-                  </motion.div>
-                  <h2 className="text-3xl font-bold mb-4 gradient-text">Welcome to LearnAI</h2>
-                  <p className="text-muted-foreground max-w-md mx-auto mb-8 text-lg">
-                    Upload a PDF or text file to generate <span className="text-primary font-semibold">unlimited</span> flashcards, quizzes, and exam questions using AI.
-                  </p>
-                  <div className="grid sm:grid-cols-3 gap-4 max-w-2xl mx-auto stagger-children">
-                    <motion.div 
-                      className="p-6 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 hover-lift"
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <BookOpen className="h-8 w-8 text-primary mx-auto mb-3" />
-                      <p className="text-sm font-semibold">Flashcards</p>
-                      <p className="text-xs text-muted-foreground mt-1">Flip & memorize</p>
-                    </motion.div>
-                    <motion.div 
-                      className="p-6 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 hover-lift"
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <Sparkles className="h-8 w-8 text-accent mx-auto mb-3" />
-                      <p className="text-sm font-semibold">Quiz Mode</p>
-                      <p className="text-xs text-muted-foreground mt-1">Test yourself</p>
-                    </motion.div>
-                    <motion.div 
-                      className="p-6 rounded-xl bg-gradient-to-br from-success/10 to-success/5 border border-success/20 hover-lift"
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <GraduationCap className="h-8 w-8 text-success mx-auto mb-3" />
-                      <p className="text-sm font-semibold">Exam Mode</p>
-                      <p className="text-xs text-muted-foreground mt-1">Written practice</p>
-                    </motion.div>
+              <Card className="p-6 sm:p-8">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
+                    <Layers3 className="h-5 w-5" />
                   </div>
-                </motion.div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Start With A Source File</h3>
+                    <p className="text-sm text-muted-foreground">Choose clean notes for best output quality.</p>
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-border/70 bg-secondary/40 p-4">
+                    <BookOpen className="mb-2 h-5 w-5 text-primary" />
+                    <p className="text-sm font-medium">Flashcards</p>
+                    <p className="text-xs text-muted-foreground">Rapid memory review</p>
+                  </div>
+                  <div className="rounded-xl border border-border/70 bg-secondary/40 p-4">
+                    <FileQuestion className="mb-2 h-5 w-5 text-accent" />
+                    <p className="text-sm font-medium">Instant Quiz</p>
+                    <p className="text-xs text-muted-foreground">MCQ + fill blanks</p>
+                  </div>
+                  <div className="rounded-xl border border-border/70 bg-secondary/40 p-4">
+                    <GraduationCap className="mb-2 h-5 w-5 text-success" />
+                    <p className="text-sm font-medium">Exam Practice</p>
+                    <p className="text-xs text-muted-foreground">Long-form answers</p>
+                  </div>
+                </div>
               </Card>
             )}
-          </motion.div>
-        </motion.div>
+          </motion.section>
+        </div>
       </main>
-      
-      {/* Footer */}
-      <footer className="border-t border-border/50 mt-12 relative z-10">
-        <div className="container mx-auto px-4 py-6">
-          <p className="text-center text-sm text-muted-foreground">
-            <span className="gradient-text font-medium">LearnAI</span> — Free AI Study Material Generator
-          </p>
+
+      <footer className="relative z-10 mt-10 border-t border-border/60">
+        <div className="mx-auto max-w-7xl px-4 py-5 text-center text-sm text-muted-foreground sm:px-6">
+          <span className="gradient-text font-semibold">LearnAI</span> | AI Study Workspace
         </div>
       </footer>
     </div>

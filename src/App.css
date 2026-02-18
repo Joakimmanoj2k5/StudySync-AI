@@ -250,9 +250,9 @@
 /* Glowing border for active items */
 .glow-border {
   box-shadow: 
-    0 0 0 1px rgba(99, 102, 241, 0.3),
-    0 0 15px rgba(99, 102, 241, 0.2),
-    0 0 30px rgba(99, 102, 241, 0.1);
+    0 0 0 1px rgba(34, 197, 94, 0.3),
+    0 0 15px rgba(34, 197, 94, 0.2),
+    0 0 30px rgba(34, 197, 94, 0.1);
 }
 
 /* Tab indicator slide */
@@ -263,14 +263,14 @@
 /* Upload zone effect */
 .upload-zone {
   position: relative;
-  border: 2px dashed rgba(99, 102, 241, 0.3);
+  border: 2px dashed rgba(34, 197, 94, 0.3);
   transition: all 0.3s ease;
 }
 
 .upload-zone:hover,
 .upload-zone.drag-over {
-  border-color: rgba(99, 102, 241, 0.6);
-  background: rgba(99, 102, 241, 0.05);
+  border-color: rgba(34, 197, 94, 0.6);
+  background: rgba(34, 197, 94, 0.06);
   transform: scale(1.01);
 }
 
@@ -279,7 +279,7 @@
   position: absolute;
   inset: -2px;
   border-radius: inherit;
-  background: linear-gradient(45deg, #6366f1, #8b5cf6, #a855f7, #6366f1);
+  background: linear-gradient(45deg, #22c55e, #16a34a, #14532d, #22c55e);
   background-size: 300% 300%;
   opacity: 0;
   transition: opacity 0.3s ease;

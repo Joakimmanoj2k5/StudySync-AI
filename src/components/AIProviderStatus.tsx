@@ -12,9 +12,9 @@ import {
 } from '@/utils/aiAdapter';
 
 const PROVIDER_INFO: Record<AIProvider, { name: string; icon: typeof Cpu; color: string }> = {
-  ollama: { name: 'Ollama (Local)', icon: Server, color: 'text-blue-500' },
-  gemini: { name: 'Google Gemini', icon: Zap, color: 'text-purple-500' },
-  groq: { name: 'Groq', icon: Cloud, color: 'text-orange-500' }
+  ollama: { name: 'Ollama (Local)', icon: Server, color: 'text-emerald-500' },
+  gemini: { name: 'Google Gemini', icon: Zap, color: 'text-green-500' },
+  groq: { name: 'Groq', icon: Cloud, color: 'text-lime-500' }
 };
 
 export function AIProviderStatus() {
@@ -64,7 +64,7 @@ export function AIProviderStatus() {
   // Don't render until initialized to prevent flash
   if (!isInitialized) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card/50 border border-border/50 min-w-[120px] h-[36px]">
+      <div className="flex h-[36px] items-center gap-2 rounded-lg border border-border/50 bg-card/50 px-3 py-2 min-w-[110px]">
         <div className="w-4 h-4 bg-muted/50 rounded animate-pulse" />
         <div className="w-16 h-3 bg-muted/50 rounded animate-pulse hidden sm:block" />
       </div>
@@ -72,9 +72,9 @@ export function AIProviderStatus() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative w-full sm:w-auto">
       <div 
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card/50 border border-border/50 cursor-pointer hover:bg-card/80 transition-colors"
+        className="flex w-full cursor-pointer items-center gap-2 rounded-lg border border-border/50 bg-card/50 px-3 py-2 transition-colors hover:bg-card/80 sm:w-auto"
         onClick={() => setShowDropdown(!showDropdown)}
       >
         <ProviderIcon className={`w-4 h-4 ${PROVIDER_INFO[currentProvider].color}`} />
@@ -111,7 +111,7 @@ export function AIProviderStatus() {
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden"
+            className="absolute right-0 top-full z-50 mt-2 w-[min(14rem,calc(100vw-1.5rem))] overflow-hidden rounded-lg border border-border bg-card shadow-xl sm:w-56"
           >
             <div className="p-2">
               <p className="text-xs text-muted-foreground px-2 py-1 mb-1">Select AI Model</p>
