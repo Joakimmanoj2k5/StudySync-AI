@@ -20,6 +20,7 @@ import { StudyBankList } from './StudyBankList';
 import { CustomInstructions } from './CustomInstructions';
 import { AIProviderStatus } from './AIProviderStatus';
 import { ProgressDashboard } from './ProgressDashboard';
+import { StudyToolkit } from './StudyToolkit';
 import { useStudy } from '@/context/useStudy';
 import { exportToPDF } from '@/utils/exportPDF';
 import type { StudyBank } from '@/types';
@@ -166,6 +167,7 @@ export function Dashboard() {
         <div className="grid gap-6 lg:grid-cols-[330px,1fr]">
           <motion.aside variants={cardVariants} initial="hidden" animate="visible" className="space-y-5 lg:sticky lg:top-24 lg:h-fit">
             <FileUpload />
+            <StudyToolkit />
             <CustomInstructions />
             <StudyBankList onSelect={handleSelectBank} />
           </motion.aside>

@@ -3,7 +3,5 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://learnusingai.vercel.app/sitemap.xml
-
-# Crawl-delay
-Crawl-delay: 1
+Sitemap: https://learnusingai.me/sitemap.xml
+Host: https://learnusingai.me

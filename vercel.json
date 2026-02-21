@@ -1,5 +1,18 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": "vite"
+  "framework": "vite",
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "learnusingai.vercel.app"
+        }
+      ],
+      "destination": "https://learnusingai.me/$1",
+      "permanent": true
+    }
+  ]
 }
