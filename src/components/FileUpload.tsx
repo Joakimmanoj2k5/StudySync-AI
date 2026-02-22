@@ -71,6 +71,8 @@ export function FileUpload() {
   const validateAndSetFile = (file: File) => {
     const validTypes = [
       'application/pdf', 
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       'text/plain', 
       'text/markdown',
       'image/png',
@@ -79,13 +81,13 @@ export function FileUpload() {
       'image/bmp',
       'image/gif',
     ];
-    const validExtensions = ['.pdf', '.txt', '.md', '.png', '.jpg', '.jpeg', '.webp', '.bmp', '.gif'];
+    const validExtensions = ['.pdf', '.ppt', '.pptx', '.txt', '.md', '.png', '.jpg', '.jpeg', '.webp', '.bmp', '.gif'];
     
     const hasValidType = validTypes.includes(file.type) || file.type.startsWith('image/');
     const hasValidExtension = validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
     
     if (!hasValidType && !hasValidExtension) {
-      setError('Please upload a PDF, text file, or image');
+      setError('Please upload a PDF, PowerPoint, text file, or image');
       return;
     }
     
@@ -212,7 +214,7 @@ export function FileUpload() {
           </motion.div>
           <div>
             <h2 className="text-lg font-semibold gradient-text">Upload Study Material</h2>
-            <p className="text-sm text-muted-foreground">PDF, images, or text files supported</p>
+            <p className="text-sm text-muted-foreground">PDF, PPT/PPTX, images, or text files supported</p>
           </div>
         </div>
         
@@ -237,7 +239,7 @@ export function FileUpload() {
               >
                 <input
                   type="file"
-                  accept=".pdf,.txt,.md,.png,.jpg,.jpeg,.webp,.bmp,.gif,image/*"
+                  accept=".pdf,.ppt,.pptx,.txt,.md,.png,.jpg,.jpeg,.webp,.bmp,.gif,image/*"
                   onChange={handleFileSelect}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />

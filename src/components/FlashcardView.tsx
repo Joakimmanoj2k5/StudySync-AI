@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RotateCcw, ChevronLeft, ChevronRight, Shuffle, BookOpen, Star, Clock } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
@@ -47,6 +47,75 @@ export function FlashcardView({ flashcards, bankId = 'default', bankName = 'Stud
     };
   }, [viewedCards.size, bankId, bankName, flashcards.length]);
   
+  const currentCard = cards[currentIndex] || cards[0];
+
+  const handleNext = useCallback(() => {
+    setIsFlipped(false);
+    setTimeout(() => {
+      setCurrentIndex((prev) => {
+        const newIndex = (prev + 1) % cards.length;
+        setViewedCards(v => new Set([...v, newIndex]));
+        return newIndex;
+      });
+    }, 150);
+  }, [cards.length]);
+  
+  const handlePrev = useCallback(() => {
+    setIsFlipped(false);
+    setTimeout(() => {
+      setCurrentIndex((prev) => {
+        const newIndex = (prev - 1 + cards.length) % cards.length;
+        setViewedCards(v => new Set([...v, newIndex]));
+        return newIndex;
+      });
+    }, 150);
+  }, [cards.length]);
+  
+  const handleShuffle = () => {
+    const shuffled = [...flashcards].sort(() => Math.random() - 0.5);
+    setShuffledCards(shuffled);
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    setViewedCards(new Set([0]));
+  };
+  
+  const handleFlip = useCallback(() => {
+    setIsFlipped((prev) => !prev);
+  }, []);
+
+  // Keyboard shortcuts: Space flips card, Arrow keys navigate cards.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.altKey || event.metaKey || event.ctrlKey) return;
+
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName.toLowerCase();
+      if (tagName === 'input' || tagName === 'textarea' || target?.isContentEditable) {
+        return;
+      }
+
+      if (event.code === 'Space') {
+        event.preventDefault();
+        handleFlip();
+        return;
+      }
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        handleNext();
+        return;
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        handlePrev();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [handleNext, handlePrev, handleFlip]);
+
   if (flashcards.length === 0) {
     return (
       <Card className="p-12 text-center">
@@ -59,8 +128,6 @@ export function FlashcardView({ flashcards, bankId = 'default', bankName = 'Stud
     );
   }
   
-  const currentCard = cards[currentIndex] || cards[0];
-  
   if (!currentCard) {
     return (
       <Card className="p-12 text-center">
@@ -69,40 +136,6 @@ export function FlashcardView({ flashcards, bankId = 'default', bankName = 'Stud
       </Card>
     );
   }
-  
-  const handleNext = () => {
-    setIsFlipped(false);
-    setTimeout(() => {
-      setCurrentIndex((prev) => {
-        const newIndex = (prev + 1) % cards.length;
-        setViewedCards(v => new Set([...v, newIndex]));
-        return newIndex;
-      });
-    }, 150);
-  };
-  
-  const handlePrev = () => {
-    setIsFlipped(false);
-    setTimeout(() => {
-      setCurrentIndex((prev) => {
-        const newIndex = (prev - 1 + cards.length) % cards.length;
-        setViewedCards(v => new Set([...v, newIndex]));
-        return newIndex;
-      });
-    }, 150);
-  };
-  
-  const handleShuffle = () => {
-    const shuffled = [...flashcards].sort(() => Math.random() - 0.5);
-    setShuffledCards(shuffled);
-    setCurrentIndex(0);
-    setIsFlipped(false);
-    setViewedCards(new Set([0]));
-  };
-  
-  const handleFlip = () => {
-    setIsFlipped(!isFlipped);
-  };
   
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();

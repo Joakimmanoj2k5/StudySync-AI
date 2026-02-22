@@ -4,6 +4,7 @@
  */
 
 import type { PDFPageProxy, TextItem } from 'pdfjs-dist/types/src/display/api';
+import JSZip from 'jszip';
 
 const DEBUG_EXTRACTOR = import.meta.env.DEV;
 const debugLog = (...args: unknown[]) => {
@@ -280,8 +281,97 @@ export async function extractTextFromFile(file: File): Promise<string> {
   });
 }
 
+function extractReadableTextFromBinary(buffer: ArrayBuffer): string {
+  const decoder = new TextDecoder('latin1');
+  const raw = decoder.decode(new Uint8Array(buffer));
+  const normalized = raw.replace(/[^\x20-\x7E\r\n]+/g, ' ');
+  const chunks = normalized.match(/[A-Za-z][A-Za-z0-9 ,.;:()\-_/]{4,}/g) || [];
+  const deduped = Array.from(new Set(chunks.map((chunk) => chunk.trim()))).filter((chunk) => chunk.length > 4 && chunk.length < 240);
+  return deduped.join('\n');
+}
+
 /**
- * Main extraction function that handles PDFs, images, and text files
+ * Extract text from .pptx by reading slide XMLs inside the zip.
+ * For legacy .ppt, fallback to binary text extraction.
+ */
+export async function extractTextFromPowerPoint(
+  file: File,
+  onProgress?: (progress: ExtractionProgress) => void
+): Promise<ExtractionResult> {
+  const fileName = file.name.toLowerCase();
+  const isPptx =
+    fileName.endsWith('.pptx') ||
+    file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+
+  if (!isPptx) {
+    const legacyBuffer = await file.arrayBuffer();
+    const legacyText = extractReadableTextFromBinary(legacyBuffer);
+    if (legacyText.trim().length < 120) {
+      throw new Error('Legacy .ppt extraction is limited. Please re-save as .pptx for reliable text extraction.');
+    }
+
+    if (onProgress) {
+      onProgress({ currentPage: 1, totalPages: 1, percentage: 100, status: 'Extracted legacy .ppt content' });
+    }
+
+    return {
+      text: legacyText,
+      pageCount: 1,
+    };
+  }
+
+  const arrayBuffer = await file.arrayBuffer();
+  const zip = await JSZip.loadAsync(arrayBuffer);
+  const parser = new DOMParser();
+
+  const slidePaths = Object.keys(zip.files)
+    .filter((path) => /^ppt\/slides\/slide\d+\.xml$/i.test(path))
+    .sort((a, b) => {
+      const na = Number(a.match(/slide(\d+)\.xml/i)?.[1] || '0');
+      const nb = Number(b.match(/slide(\d+)\.xml/i)?.[1] || '0');
+      return na - nb;
+    });
+
+  if (slidePaths.length === 0) {
+    throw new Error('No slides found in this .pptx file.');
+  }
+
+  const slideTexts: string[] = [];
+  for (let i = 0; i < slidePaths.length; i++) {
+    const path = slidePaths[i];
+    if (onProgress) {
+      onProgress({
+        currentPage: i + 1,
+        totalPages: slidePaths.length,
+        percentage: Math.round(((i + 1) / slidePaths.length) * 100),
+        status: `Reading slide ${i + 1}...`,
+      });
+    }
+
+    const xml = await zip.file(path)?.async('text');
+    if (!xml) continue;
+
+    const doc = parser.parseFromString(xml, 'application/xml');
+    const textNodes = Array.from(doc.getElementsByTagName('a:t'));
+    const text = textNodes.map((node) => node.textContent?.trim() || '').filter(Boolean).join(' ');
+    if (text) {
+      slideTexts.push(`Slide ${i + 1}:\n${text}`);
+    }
+  }
+
+  const finalText = slideTexts.join('\n\n');
+  if (!finalText.trim()) {
+    throw new Error('Could not extract readable text from this .pptx file.');
+  }
+
+  return {
+    text: finalText,
+    pageCount: slidePaths.length,
+  };
+}
+
+/**
+ * Main extraction function that handles PDFs, PPT/PPTX, images, and text files
  */
 export async function extractText(
   file: File,
@@ -295,6 +385,16 @@ export async function extractText(
   // Handle PDF files
   if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
     return extractTextFromPDF(file, onProgress);
+  }
+
+  // Handle PowerPoint files
+  if (
+    fileType === 'application/vnd.ms-powerpoint' ||
+    fileType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+    fileName.endsWith('.ppt') ||
+    fileName.endsWith('.pptx')
+  ) {
+    return extractTextFromPowerPoint(file, onProgress);
   }
   
   // Handle image files (for OCR)
