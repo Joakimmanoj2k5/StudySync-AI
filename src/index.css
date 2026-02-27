@@ -1,5 +1,30 @@
 @import "tailwindcss";
 
+/* Fallback CSS variables so styling still works even in tools that don't parse Tailwind's @theme at-rule. */
+:root {
+  --color-background: #050806;
+  --color-foreground: #fafafa;
+  --color-card: #0c120e;
+  --color-card-foreground: #fafafa;
+  --color-popover: #0c120e;
+  --color-popover-foreground: #fafafa;
+  --color-primary: #22c55e;
+  --color-primary-foreground: #031508;
+  --color-secondary: #101a13;
+  --color-secondary-foreground: #fafafa;
+  --color-muted: #1a231d;
+  --color-muted-foreground: #9ca3af;
+  --color-accent: #16a34a;
+  --color-accent-foreground: #ecfdf5;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #fafafa;
+  --color-border: #1f2a24;
+  --color-input: #1f2a24;
+  --color-ring: #22c55e;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+}
+
 @theme {
   --color-background: #050806;
   --color-foreground: #fafafa;

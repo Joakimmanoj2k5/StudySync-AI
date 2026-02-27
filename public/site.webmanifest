@@ -3,8 +3,8 @@
   "short_name": "LearnAI",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0b1020",
-  "theme_color": "#6366f1",
+  "background_color": "#050806",
+  "theme_color": "#16a34a",
   "description": "Free AI study tool to generate flashcards, quizzes and exam questions from notes and PDFs.",
   "icons": [
     {
