@@ -5,29 +5,70 @@ import { Button, Card, Progress } from '@/components/ui';
 import { useStudy } from '@/context/useStudy';
 import { extractText, type ExtractionProgress } from '@/utils/pdfExtractor';
 import { chunkText, getChunkingStats } from '@/utils/chunking';
-import { processChunk } from '@/utils/aiProcessor';
+import { checkProviderStatus, getConfig, processChunk } from '@/utils/aiProcessor';
 
-function isLikelyTimetable(text: string): boolean {
+interface TimetableDetectionResult {
+  isLikelyTimetable: boolean;
+  confidence: 'low' | 'medium' | 'high';
+  structuredLineCount: number;
+}
+
+function detectTimetableContent(text: string): TimetableDetectionResult {
   const normalized = text.toLowerCase();
-  const timetableSignals = [
+  const lines = text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const strongSignals = [
     'exam timetable',
+    'exam schedule',
+    'class timetable',
     'time table',
+    'schedule of examinations',
+  ];
+  const supportSignals = [
     'timetable',
-    'schedule',
     'slot',
-    'session',
-    'date',
-    'time',
     'venue',
-    'room',
+    'room no',
+    'room number',
+    'exam hall',
+    'reporting time',
   ];
 
-  const matches = timetableSignals.filter((signal) => normalized.includes(signal)).length;
+  const strongSignalCount = strongSignals.filter((signal) => normalized.includes(signal)).length;
+  const supportSignalCount = supportSignals.filter((signal) => normalized.includes(signal)).length;
   const dayMatches = (normalized.match(/\b(mon|tue|wed|thu|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/g) || []).length;
   const dateMatches = (normalized.match(/\b\d{1,2}[/-]\d{1,2}([/-]\d{2,4})?\b/g) || []).length;
   const timeMatches = (normalized.match(/\b\d{1,2}:\d{2}\s?(am|pm)?\b/g) || []).length;
 
-  return matches >= 2 && (dayMatches >= 2 || dateMatches >= 3 || timeMatches >= 2);
+  const structuredLineCount = lines.filter((line) => {
+    const wordCount = line.split(/\s+/).filter(Boolean).length;
+    if (wordCount > 18) return false;
+
+    let structureSignals = 0;
+    if (/\b(mon|tue|wed|thu|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i.test(line)) structureSignals += 1;
+    if (/\b\d{1,2}[/-]\d{1,2}([/-]\d{2,4})?\b/.test(line)) structureSignals += 1;
+    if (/\b\d{1,2}:\d{2}\s?(am|pm)?\b/i.test(line)) structureSignals += 1;
+    if (/\b(venue|room|hall|slot|session)\b/i.test(line)) structureSignals += 1;
+
+    return structureSignals >= 2;
+  }).length;
+
+  const hasDenseSchedulePattern = dayMatches >= 3 && dateMatches >= 2 && timeMatches >= 2;
+  const isHighConfidence = strongSignalCount >= 1 && (structuredLineCount >= 2 || hasDenseSchedulePattern);
+  const isMediumConfidence = !isHighConfidence && supportSignalCount >= 2 && structuredLineCount >= 3 && dayMatches >= 2;
+
+  if (isHighConfidence) {
+    return { isLikelyTimetable: true, confidence: 'high', structuredLineCount };
+  }
+
+  if (isMediumConfidence) {
+    return { isLikelyTimetable: true, confidence: 'medium', structuredLineCount };
+  }
+
+  return { isLikelyTimetable: false, confidence: 'low', structuredLineCount };
 }
 
 export function FileUpload() {
@@ -112,8 +153,17 @@ export function FileUpload() {
         throw new Error('No text content could be extracted from the file. The file might be empty or image-based.');
       }
 
-      if (isLikelyTimetable(result.text)) {
-        throw new Error('This file looks like a timetable/schedule. Upload chapter notes or concept-based content to generate meaningful study questions.');
+      const timetableDetection = detectTimetableContent(result.text);
+      if (timetableDetection.isLikelyTimetable) {
+        const continueAnyway = window.confirm(
+          timetableDetection.confidence === 'high'
+            ? 'This file strongly resembles a timetable or schedule. Press OK to continue anyway, or Cancel to choose a different file.'
+            : 'Parts of this file look schedule-like. Press OK to continue anyway if this is actually your notes.'
+        );
+
+        if (!continueAnyway) {
+          throw new Error('Upload cancelled because the file looked like a timetable or schedule.');
+        }
       }
       
       // Step 2: Chunk the text
@@ -124,6 +174,13 @@ export function FileUpload() {
       
       if (chunks.length === 0) {
         throw new Error('No content could be extracted from the file');
+      }
+
+      const { provider } = getConfig();
+      const providerAvailable = await checkProviderStatus(provider);
+      if (!providerAvailable) {
+        const providerLabel = provider.charAt(0).toUpperCase() + provider.slice(1);
+        throw new Error(`${providerLabel} is unavailable right now. Switch providers or fix the current provider before generating questions.`);
       }
       
       // Step 3: Create study bank and start processing
@@ -156,7 +213,9 @@ export function FileUpload() {
         // Allow UI to update before processing
         await new Promise(resolve => setTimeout(resolve, 50));
         
-        const chunkResult = await processChunk(chunks[i].text, i, chunks.length);
+        const chunkResult = await processChunk(chunks[i].text, i, chunks.length, undefined, {
+          skipAvailabilityCheck: true,
+        });
         console.log(`[FileUpload] Chunk ${i + 1} result:`, {
           flashcards: chunkResult.flashcards.length,
           mcqs: chunkResult.mcqs.length,

@@ -42,6 +42,17 @@ export interface GeneratedContent {
   shortAnswers: Omit<ShortAnswer, 'id' | 'chunkIndex'>[];
 }
 
+interface GenerationTargets {
+  flashcards: number;
+  mcqs: number;
+  fillBlanks: number;
+  shortAnswers: number;
+}
+
+interface ProcessChunkOptions {
+  skipAvailabilityCheck?: boolean;
+}
+
 // Default models for each provider
 const DEFAULT_MODELS: Record<AIProvider, string> = {
   ollama: 'llama3.2',
@@ -157,11 +168,81 @@ export function getCustomInstructions(): string {
 // Prompt Template
 // ============================================================================
 
-function getStudyMaterialsPrompt(text: string): string {
+function getWordCount(text: string): number {
+  return text.split(/\s+/).filter(Boolean).length;
+}
+
+function getGenerationTargets(text: string, totalChunks: number): GenerationTargets {
+  const wordCount = getWordCount(text);
+
+  const baseTargets: GenerationTargets =
+    wordCount < 250
+      ? { flashcards: 3, mcqs: 2, fillBlanks: 2, shortAnswers: 1 }
+      : wordCount < 700
+        ? { flashcards: 5, mcqs: 3, fillBlanks: 2, shortAnswers: 1 }
+        : wordCount < 1400
+          ? { flashcards: 7, mcqs: 4, fillBlanks: 3, shortAnswers: 2 }
+          : { flashcards: 8, mcqs: 4, fillBlanks: 4, shortAnswers: 2 };
+
+  if (totalChunks === 1) {
+    return {
+      flashcards: Math.min(10, baseTargets.flashcards + 2),
+      mcqs: Math.min(5, baseTargets.mcqs + 1),
+      fillBlanks: Math.min(5, baseTargets.fillBlanks + 1),
+      shortAnswers: Math.min(3, baseTargets.shortAnswers + 1),
+    };
+  }
+
+  return baseTargets;
+}
+
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/[^\p{L}\p{N}\s]/gu, '')
+    .trim();
+}
+
+function uniqueBySignature<T>(items: T[], getSignature: (item: T) => string): T[] {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const signature = getSignature(item);
+    if (!signature || seen.has(signature)) {
+      return false;
+    }
+
+    seen.add(signature);
+    return true;
+  });
+}
+
+function trimGeneratedContent(content: GeneratedContent, targets: GenerationTargets): GeneratedContent {
+  return {
+    flashcards: uniqueBySignature(content.flashcards, (item) => normalizeText(item.question))
+      .slice(0, targets.flashcards),
+    mcqs: uniqueBySignature(content.mcqs, (item) => normalizeText(item.question))
+      .slice(0, targets.mcqs),
+    fillBlanks: uniqueBySignature(content.fillBlanks, (item) => normalizeText(item.sentence))
+      .slice(0, targets.fillBlanks),
+    shortAnswers: uniqueBySignature(content.shortAnswers, (item) => normalizeText(item.question))
+      .slice(0, targets.shortAnswers),
+  };
+}
+
+function getStudyMaterialsPrompt(
+  text: string,
+  chunkIndex: number,
+  totalChunks: number,
+  targets: GenerationTargets
+): string {
   const userInstructions = getCustomInstructions();
   const additionalContext = userInstructions ? `\n\nADDITIONAL USER INSTRUCTIONS: ${userInstructions}` : '';
   
   return `You are an expert educator and exam question writer. Your task is to create HIGH-QUALITY, EXAM-WORTHY study materials.${additionalContext}
+
+DOCUMENT SEGMENT: ${chunkIndex + 1} of ${totalChunks}
 
 CONTENT TO STUDY:
 """
@@ -179,6 +260,8 @@ QUALITY RULES (MANDATORY):
 8. If the source has formulas, steps, timelines, or named entities, include them.
 9. Do not invent facts not present in the source text.
 10. Keep language clear and exam-focused.
+11. Avoid repeating the same concept in multiple formats unless the source strongly justifies it.
+12. If this segment is thin or overlaps with nearby text, return fewer items instead of filler.
 
 RETURN ONLY THIS JSON FORMAT (no markdown, no extra text):
 {
@@ -196,11 +279,11 @@ RETURN ONLY THIS JSON FORMAT (no markdown, no extra text):
   ]
 }
 
-GENERATE EXACTLY:
-- 12 high-quality flashcards covering main concepts
-- 6 challenging MCQs with 4 plausible options each
-- 6 fill-in-the-blanks for key terminology
-- 4 short answer questions requiring deeper thinking
+DO NOT EXCEED THESE TARGET COUNTS:
+- ${targets.flashcards} high-quality flashcards
+- ${targets.mcqs} MCQs with 4 plausible options each
+- ${targets.fillBlanks} fill-in-the-blanks for key terminology
+- ${targets.shortAnswers} short answer questions requiring deeper thinking
 
 OUTPUT: Valid JSON only. No markdown code blocks. No extra text.`;
 }
@@ -624,48 +707,89 @@ function extractImportantWords(sentence: string): string[] {
     .filter(word => word.length > 3 && !stopWords.has(word.toLowerCase()));
 }
 
-function generateFallbackContent(text: string): GeneratedContent {
+function escapeRegex(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function pickKeyPhrase(words: string[]): string {
+  return words.slice(0, Math.min(4, words.length)).join(' ');
+}
+
+function buildFallbackQuestion(sentence: string, words: string[]): string {
+  const normalizedSentence = sentence.replace(/\s+/g, ' ').trim();
+  const definitionMatch = normalizedSentence.match(/^([^.!?]{3,80}?)\s+(is|are|refers to|means)\s+/i);
+
+  if (definitionMatch && definitionMatch[1].split(/\s+/).length <= 8) {
+    return `What is ${definitionMatch[1].trim()}?`;
+  }
+
+  if (/ because /i.test(normalizedSentence)) {
+    return `Why is ${pickKeyPhrase(words)} important?`;
+  }
+
+  if (/(steps?|process|procedure|method|workflow)/i.test(normalizedSentence)) {
+    return `How does ${pickKeyPhrase(words)} work?`;
+  }
+
+  return `Explain ${pickKeyPhrase(words)} in context.`;
+}
+
+function generateFallbackContent(text: string, targets: GenerationTargets): GeneratedContent {
   console.log('[AIAdapter] Generating fallback content locally');
   
   const sentences = extractSentences(text);
+  const optionPool = Array.from(
+    new Set(
+      sentences
+        .flatMap((sentence) => extractImportantWords(sentence))
+        .map((word) => word.trim())
+        .filter((word) => word.length > 3)
+    )
+  );
   const flashcards: GeneratedContent['flashcards'] = [];
   const mcqs: GeneratedContent['mcqs'] = [];
   const fillBlanks: GeneratedContent['fillBlanks'] = [];
   const shortAnswers: GeneratedContent['shortAnswers'] = [];
   
-  for (let i = 0; i < sentences.length && flashcards.length < 25; i++) {
+  for (let i = 0; i < sentences.length && flashcards.length < targets.flashcards; i++) {
     const sentence = sentences[i];
     const words = extractImportantWords(sentence);
     
     if (words.length > 0) {
       flashcards.push({
-        question: `What do you know about: ${words.slice(0, 2).join(', ')}?`,
+        question: buildFallbackQuestion(sentence, words),
         answer: sentence
       });
     }
   }
   
-  for (let i = 0; i < sentences.length && fillBlanks.length < 15; i++) {
+  for (let i = 0; i < sentences.length && fillBlanks.length < targets.fillBlanks; i++) {
     const sentence = sentences[i];
     const words = extractImportantWords(sentence);
     
     if (words.length > 0) {
-      const wordToRemove = words[Math.floor(Math.random() * Math.min(3, words.length))];
-      const blanked = sentence.replace(new RegExp(`\\b${wordToRemove}\\b`, 'i'), '_____');
+      const wordToRemove = [...words].sort((a, b) => b.length - a.length)[0];
+      const blanked = sentence.replace(new RegExp(`\\b${escapeRegex(wordToRemove)}\\b`, 'i'), '_____');
       
       if (blanked !== sentence) {
-        fillBlanks.push({ sentence: blanked, answer: wordToRemove, explanation: '' });
+        fillBlanks.push({
+          sentence: blanked,
+          answer: wordToRemove,
+          explanation: `This term is central to the idea expressed in the original sentence: ${sentence}`
+        });
       }
     }
   }
   
-  for (let i = 0; i < sentences.length && mcqs.length < 10; i++) {
+  for (let i = 0; i < sentences.length && mcqs.length < targets.mcqs; i++) {
     const sentence = sentences[i];
     const words = extractImportantWords(sentence);
     
-    if (words.length >= 4) {
+    if (words.length >= 2) {
       const correctWord = words[0];
-      const wrongOptions = words.slice(1, 4);
+      const wrongOptions = optionPool
+        .filter((word) => normalizeText(word) !== normalizeText(correctWord))
+        .slice(0, 3);
       while (wrongOptions.length < 3) wrongOptions.push(`Option ${wrongOptions.length + 1}`);
       
       const options = [correctWord, ...wrongOptions];
@@ -675,7 +799,7 @@ function generateFallbackContent(text: string): GeneratedContent {
       }
       
       mcqs.push({
-        question: `Which term is most relevant to: "${sentence.substring(0, 60)}..."?`,
+        question: `Which term best completes this statement from the source?`,
         options,
         correctIndex: options.indexOf(correctWord),
         explanation: sentence
@@ -683,18 +807,18 @@ function generateFallbackContent(text: string): GeneratedContent {
     }
   }
   
-  for (let i = 0; i < sentences.length && shortAnswers.length < 8; i++) {
+  for (let i = 0; i < sentences.length && shortAnswers.length < targets.shortAnswers; i++) {
     const sentence = sentences[i];
     const words = extractImportantWords(sentence);
     if (words.length > 0) {
       shortAnswers.push({
-        question: `Explain the concept: ${words.slice(0, 2).join(' ')}`,
+        question: `How would you explain ${pickKeyPhrase(words)} based on this material?`,
         suggestedAnswer: sentence
       });
     }
   }
   
-  return { flashcards, mcqs, fillBlanks, shortAnswers };
+  return trimGeneratedContent({ flashcards, mcqs, fillBlanks, shortAnswers }, targets);
 }
 
 // ============================================================================
@@ -705,7 +829,8 @@ export async function processChunk(
   text: string,
   chunkIndex: number,
   totalChunks: number,
-  onProgress?: (text: string) => void
+  onProgress?: (text: string) => void,
+  options: ProcessChunkOptions = {}
 ): Promise<GeneratedContent> {
   console.log(`[AIAdapter] Processing chunk ${chunkIndex + 1}/${totalChunks} with ${currentConfig.provider}`);
   
@@ -714,16 +839,19 @@ export async function processChunk(
     return { flashcards: [], mcqs: [], fillBlanks: [], shortAnswers: [] };
   }
 
-  const prompt = getStudyMaterialsPrompt(text);
+  const targets = getGenerationTargets(text, totalChunks);
+  const prompt = getStudyMaterialsPrompt(text, chunkIndex, totalChunks, targets);
 
-  try {
+  if (!options.skipAvailabilityCheck) {
     const isAvailable = await checkProviderStatus();
     if (!isAvailable) {
       throw new Error(`${currentConfig.provider} is not available. Check connection or API key.`);
     }
+  }
 
+  try {
     const response = await callAI(prompt, onProgress);
-    const parsed = parseAIResponse(response);
+    const parsed = trimGeneratedContent(parseAIResponse(response), targets);
     
     const totalItems = parsed.flashcards.length + parsed.mcqs.length + 
                        parsed.fillBlanks.length + parsed.shortAnswers.length;
@@ -734,12 +862,12 @@ export async function processChunk(
     }
     
     console.log('[AIAdapter] No items parsed, using fallback');
-    return generateFallbackContent(text);
+    return generateFallbackContent(text, targets);
     
   } catch (error) {
     console.error('[AIAdapter] Error:', error);
     console.log('[AIAdapter] Falling back to local content generator');
-    return generateFallbackContent(text);
+    return generateFallbackContent(text, targets);
   }
 }
 

@@ -21,6 +21,7 @@ import { CustomInstructions } from './CustomInstructions';
 import { AIProviderStatus } from './AIProviderStatus';
 import { ProgressDashboard } from './ProgressDashboard';
 import { StudyToolkit } from './StudyToolkit';
+import { ThemeCustomizer } from './ThemeCustomizer';
 import { useStudy } from '@/context/useStudy';
 import { exportToPDF } from '@/utils/exportPDF';
 import type { StudyBank } from '@/types';
@@ -72,6 +73,7 @@ export function Dashboard() {
             </div>
 
             <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+              <ThemeCustomizer />
               <Button
                 variant={showProgress ? 'default' : 'ghost'}
                 size="sm"
@@ -82,13 +84,17 @@ export function Dashboard() {
                 <span className="sm:hidden">Stats</span>
                 <span className="hidden sm:inline">Progress</span>
               </Button>
-              {activeBank && (
-                <Button variant="outline" size="sm" onClick={handleExportPDF} className="btn-shine w-full sm:w-auto">
-                  <Download className="mr-2 h-4 w-4" />
-                  <span className="sm:hidden">Export</span>
-                  <span className="hidden sm:inline">Export PDF</span>
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportPDF}
+                className="btn-shine w-full sm:w-auto"
+                disabled={!activeBank}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                <span className="sm:hidden">Export</span>
+                <span className="hidden sm:inline">Export PDF</span>
+              </Button>
               <div className="col-span-2 sm:col-span-1">
                 <AIProviderStatus />
               </div>
@@ -142,7 +148,7 @@ export function Dashboard() {
               <p className="mt-2 text-sm text-muted-foreground sm:text-base">
                 {activeBank
                   ? `${totalItems} study items generated across flashcards, quiz, and exam mode.`
-                  : 'Drop a chapter PDF or clean notes. Timetable/schedule files are automatically detected and blocked.'}
+                  : 'Drop a chapter PDF or clean notes. Timetable-heavy files are flagged, but you can continue if the detector is wrong.'}
               </p>
             </div>
             {activeBank && (
@@ -178,6 +184,19 @@ export function Dashboard() {
             ) : activeBank ? (
               <>
                 <Card className="p-2.5 sm:p-4">
+                  <div className="mb-4 flex flex-col gap-3 rounded-xl border border-border/70 bg-secondary/35 p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Current Study Bank</p>
+                      <p className="text-xs text-muted-foreground">
+                        Export the active pack as a printable PDF with answers included.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={handleExportPDF} className="btn-shine w-full sm:w-auto">
+                      <Download className="h-4 w-4" />
+                      Export PDF
+                    </Button>
+                  </div>
+
                   <Tabs value={activeTab} onValueChange={setActiveTab}>
                     <TabsList className="grid w-full grid-cols-3 gap-1 bg-secondary/60 p-1">
                       <TabsTrigger value="flashcards" className="gap-1 px-2 py-2 text-[11px] sm:gap-2 sm:px-4 sm:text-sm">

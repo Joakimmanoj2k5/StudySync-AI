@@ -99,7 +99,7 @@
 
 .stat-card:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 8px 30px rgba(var(--primary-rgb), 0.15);
 }
 
 /* Flashcard special effects */
@@ -135,7 +135,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, transparent 40%, rgba(99, 102, 241, 0.1) 100%);
+  background: linear-gradient(135deg, transparent 40%, rgba(var(--primary-rgb), 0.1) 100%);
   opacity: 0;
   transition: opacity 0.2s ease;
 }
@@ -193,7 +193,7 @@
   position: absolute;
   width: 4px;
   height: 4px;
-  background: rgba(99, 102, 241, 0.5);
+  background: rgba(var(--primary-rgb), 0.5);
   border-radius: 50%;
   animation: particle-float 10s ease-in-out infinite;
 }
@@ -252,9 +252,9 @@
 /* Glowing border for active items */
 .glow-border {
   box-shadow: 
-    0 0 0 1px rgba(34, 197, 94, 0.3),
-    0 0 15px rgba(34, 197, 94, 0.2),
-    0 0 30px rgba(34, 197, 94, 0.1);
+    0 0 0 1px rgba(var(--primary-rgb), 0.3),
+    0 0 15px rgba(var(--primary-rgb), 0.2),
+    0 0 30px rgba(var(--primary-rgb), 0.1);
 }
 
 /* Tab indicator slide */
@@ -265,14 +265,14 @@
 /* Upload zone effect */
 .upload-zone {
   position: relative;
-  border: 2px dashed rgba(34, 197, 94, 0.3);
+  border: 2px dashed rgba(var(--primary-rgb), 0.3);
   transition: all 0.3s ease;
 }
 
 .upload-zone:hover,
 .upload-zone.drag-over {
-  border-color: rgba(34, 197, 94, 0.6);
-  background: rgba(34, 197, 94, 0.06);
+  border-color: rgba(var(--primary-rgb), 0.6);
+  background: rgba(var(--primary-rgb), 0.06);
   transform: scale(1.01);
 }
 
@@ -281,7 +281,7 @@
   position: absolute;
   inset: -2px;
   border-radius: inherit;
-  background: linear-gradient(45deg, #22c55e, #16a34a, #14532d, #22c55e);
+  background: linear-gradient(45deg, var(--gradient-text-1), var(--gradient-text-2), var(--gradient-text-3), var(--gradient-text-1));
   background-size: 300% 300%;
   opacity: 0;
   transition: opacity 0.3s ease;

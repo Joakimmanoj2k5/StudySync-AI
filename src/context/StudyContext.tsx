@@ -1,5 +1,5 @@
 import React, { createContext, useReducer, useEffect, useCallback, type ReactNode } from 'react';
-import type { StudyBank, ProcessingStatus, Flashcard, MCQ, FillInBlank, ShortAnswer, ChunkResult } from '../types';
+import type { StudyBank, ProcessingStatus, ChunkResult } from '../types';
 import { 
   loadStudyBanks, 
   loadStudyBanksSync, 
@@ -8,6 +8,7 @@ import {
   deleteStudyBank as deleteFromStorage,
   generateId 
 } from '../utils/storage';
+import { appendChunkResultsToBank } from '../utils/studyBankMerge';
 
 interface StudyState {
   studyBanks: StudyBank[];
@@ -104,40 +105,7 @@ function studyReducer(state: StudyState, action: StudyAction): StudyState {
       if (bankIndex === -1) return state;
       
       const bank = state.studyBanks[bankIndex];
-      
-      // Add IDs and chunk index to results
-      const newFlashcards: Flashcard[] = results.flashcards.map((f) => ({
-        ...f,
-        id: generateId(),
-        chunkIndex,
-      }));
-      
-      const newMcqs: MCQ[] = results.mcqs.map((m) => ({
-        ...m,
-        id: generateId(),
-        chunkIndex,
-      }));
-      
-      const newFillBlanks: FillInBlank[] = results.fillBlanks.map((f) => ({
-        ...f,
-        id: generateId(),
-        chunkIndex,
-      }));
-      
-      const newShortAnswers: ShortAnswer[] = results.shortAnswers.map((s) => ({
-        ...s,
-        id: generateId(),
-        chunkIndex,
-      }));
-      
-      const updatedBank: StudyBank = {
-        ...bank,
-        flashcards: [...bank.flashcards, ...newFlashcards],
-        mcqs: [...bank.mcqs, ...newMcqs],
-        fillBlanks: [...bank.fillBlanks, ...newFillBlanks],
-        shortAnswers: [...bank.shortAnswers, ...newShortAnswers],
-        processedChunks: chunkIndex + 1,
-      };
+      const updatedBank = appendChunkResultsToBank(bank, chunkIndex, results, () => generateId());
       
       const newBanks = [...state.studyBanks];
       newBanks[bankIndex] = updatedBank;
